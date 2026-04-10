@@ -1,0 +1,19 @@
+=== Screenshot Asset Plugin ===
+Contributors: devuser
+Tags: photos
+Requires at least: 6.0
+Tested up to: 6.5
+Stable tag: 1.0.0
+License: MIT
+
+Plugin used to test screenshotsAsList() with asset URLs.
+
+== Description ==
+
+A simple plugin.
+
+== Screenshots ==
+
+1. The dashboard overview.
+2. The settings page.
+3. The widget in the sidebar.

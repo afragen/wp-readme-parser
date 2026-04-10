@@ -1,0 +1,42 @@
+{
+    "name": "afragen/wp-readme-parser",
+    "description": "A Claude implementation of the WordPress.org plugin readme parser.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": ">=8.1 <8.6",
+        "symfony/html-sanitizer": "^6.3|^7.0",
+        "erusev/parsedown": "^1.7"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0",
+        "phpstan/phpstan": "^1.11",
+        "friendsofphp/php-cs-fixer": "^3.59"
+    },
+    "autoload": {
+        "psr-4": {
+            "Fragen\\WP_Readme_Parser\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Fragen\\WP_Readme_Parser\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test":     "phpunit",
+        "test:cov": "phpunit --coverage-text",
+        "stan":     "phpstan analyse --no-progress",
+        "cs":       "php-cs-fixer fix --dry-run --diff",
+        "cs:fix":   "php-cs-fixer fix",
+        "check":    ["@cs", "@stan", "@test"]
+    },
+    "scripts-descriptions": {
+        "test":     "Run the test suite.",
+        "test:cov": "Run the test suite with a coverage report.",
+        "stan":     "Run PHPStan static analysis.",
+        "cs":       "Check code style without making changes.",
+        "cs:fix":   "Fix code style violations automatically.",
+        "check":    "Run cs, stan, and tests in sequence."
+    }
+}
