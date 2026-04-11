@@ -4,11 +4,11 @@ A PHP library for parsing WordPress plugin `readme.txt` files into structured da
 with no WordPress dependencies.
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![PHP 8.1–8.5](https://img.shields.io/badge/php-8.1--8.5-8892BF.svg)](https://www.php.net/)
+[![PHP 8.2–8.5](https://img.shields.io/badge/php-8.2--8.5-8892BF.svg)](https://www.php.net/)
 
 ## Requirements
 
-- PHP 8.1 – 8.5
+- PHP 8.2 – 8.5
 - Composer
 
 ## Installation
@@ -104,7 +104,8 @@ Individual helpers are also available as standalone methods:
 
 ## Dependency injection
 
-The sanitizer and Markdown converter are both injectable, making the parser easy to test in isolation or extend:
+The sanitizer and Markdown converter are both injectable, making the parser easy to
+test in isolation or extend:
 
 ```php
 use Fragen\WP_Readme_Parser\Contracts\HtmlSanitizerInterface;

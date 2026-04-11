@@ -30,24 +30,24 @@ class LicenseValidationTest extends ParserTestCase
     public static function compatibleLicenseProvider(): array
     {
         return [
-            'GPLv2'                     => ['GPLv2'],
-            'GPL v2'                    => ['GPL v2'],
-            'GPLv2 or later'            => ['GPLv2 or later'],
-            'GPLv3'                     => ['GPLv3'],
-            'GPL-2.0-or-later'          => ['GPL-2.0-or-later'],
-            'MIT'                       => ['MIT'],
-            'Apache 2.0'               => ['Apache 2.0'],
-            'Apache License 2.0'       => ['Apache License 2.0'],
-            'CC0'                       => ['CC0'],
-            'CC BY 4.0'                 => ['CC BY 4.0'],
-            'Unlicense'                 => ['Unlicense'],
-            'Public Domain'             => ['Public Domain'],
-            'MPL-2.0'                   => ['MPL-2.0'],
-            'ISC'                       => ['ISC'],
-            'BSD 3-Clause'              => ['BSD 3-Clause'],
-            'Simplified BSD'            => ['Simplified BSD'],
-            'WTFPL'                     => ['WTFPL'],
-            'zlib'                      => ['zlib'],
+            'GPLv2'              => ['GPLv2'],
+            'GPL v2'             => ['GPL v2'],
+            'GPLv2 or later'     => ['GPLv2 or later'],
+            'GPLv3'              => ['GPLv3'],
+            'GPL-2.0-or-later'   => ['GPL-2.0-or-later'],
+            'MIT'                => ['MIT'],
+            'Apache 2.0'         => ['Apache 2.0'],
+            'Apache License 2.0' => ['Apache License 2.0'],
+            'CC0'                => ['CC0'],
+            'CC BY 4.0'          => ['CC BY 4.0'],
+            'Unlicense'          => ['Unlicense'],
+            'Public Domain'      => ['Public Domain'],
+            'MPL-2.0'            => ['MPL-2.0'],
+            'ISC'                => ['ISC'],
+            'BSD 3-Clause'       => ['BSD 3-Clause'],
+            'Simplified BSD'     => ['Simplified BSD'],
+            'WTFPL'              => ['WTFPL'],
+            'zlib'               => ['zlib'],
         ];
     }
 
@@ -62,13 +62,13 @@ class LicenseValidationTest extends ParserTestCase
     public static function incompatibleLicenseProvider(): array
     {
         return [
-            'CC BY-NC'              => ['CC BY-NC 4.0'],
-            'NonCommercial'         => ['Creative Commons NonCommercial'],
-            'CC BY-ND'              => ['CC BY-ND 4.0'],
-            'Proprietary'           => ['Proprietary'],
-            'you may not'           => ['You may not redistribute'],
-            'Personal use'          => ['Personal use only'],
-            'Apache 1'              => ['Apache 1.0'],
+            'CC BY-NC'      => ['CC BY-NC 4.0'],
+            'NonCommercial' => ['Creative Commons NonCommercial'],
+            'CC BY-ND'      => ['CC BY-ND 4.0'],
+            'Proprietary'   => ['Proprietary'],
+            'you may not'   => ['You may not redistribute'],
+            'Personal use'  => ['Personal use only'],
+            'Apache 1'      => ['Apache 1.0'],
         ];
     }
 
@@ -83,9 +83,9 @@ class LicenseValidationTest extends ParserTestCase
     public static function unknownLicenseProvider(): array
     {
         return [
-            'custom name'    => ['ACME Custom License 1.0'],
-            'made up'        => ['SuperLicense'],
-            'empty string'   => ['   '],
+            'custom name'  => ['ACME Custom License 1.0'],
+            'made up'      => ['SuperLicense'],
+            'empty string' => ['   '],
         ];
     }
 
@@ -161,8 +161,8 @@ class LicenseValidationTest extends ParserTestCase
     public function it_does_not_warn_on_valid_license(): void
     {
         $parser = $this->parseFixture('valid/standard.txt');
-        $this->assertArrayNotHasKey('license_missing',  $parser->warnings);
-        $this->assertArrayNotHasKey('invalid_license',  $parser->warnings);
-        $this->assertArrayNotHasKey('unknown_license',  $parser->warnings);
+        $this->assertArrayNotHasKey('license_missing', $parser->warnings);
+        $this->assertArrayNotHasKey('invalid_license', $parser->warnings);
+        $this->assertArrayNotHasKey('unknown_license', $parser->warnings);
     }
 }

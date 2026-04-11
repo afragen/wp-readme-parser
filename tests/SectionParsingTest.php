@@ -88,8 +88,8 @@ class SectionParsingTest extends ParserTestCase
         // Minimal readme has no installation, faq, screenshots, changelog sections.
         $parser = $this->parseFixture('valid/minimal.txt');
         $this->assertArrayNotHasKey('installation', $parser->sections);
-        $this->assertArrayNotHasKey('screenshots',  $parser->sections);
-        $this->assertArrayNotHasKey('changelog',    $parser->sections);
+        $this->assertArrayNotHasKey('screenshots', $parser->sections);
+        $this->assertArrayNotHasKey('changelog', $parser->sections);
     }
 
     // -------------------------------------------------------------------------
@@ -138,9 +138,9 @@ class SectionParsingTest extends ParserTestCase
     public function it_resolves_screenshot_alias(): void
     {
         $readme = $this->makeReadme(
-            body: "Desc.\n\n== Screenshot ==\n1. The main view."
+            body: "Desc.\n\n== Screenshot ==\n1. The main view.",
         );
-        $parser = $this->parse($readme);
+        $parser = $this->parseReal($readme);
         // 'screenshot' is an alias for 'screenshots' → captured into $screenshots array.
         $this->assertNotEmpty($parser->screenshots);
     }
@@ -180,9 +180,9 @@ class SectionParsingTest extends ParserTestCase
     public function it_renders_faq_as_dl_in_sections(): void
     {
         $parser = $this->parseFixture('valid/standard.txt');
-        $this->assertStringContainsString('<dl>',  $parser->sections['faq']);
-        $this->assertStringContainsString('<dt',   $parser->sections['faq']);
-        $this->assertStringContainsString('<dd>',  $parser->sections['faq']);
+        $this->assertStringContainsString('<dl>', $parser->sections['faq']);
+        $this->assertStringContainsString('<dt', $parser->sections['faq']);
+        $this->assertStringContainsString('<dd>', $parser->sections['faq']);
     }
 
     #[Test]
@@ -207,7 +207,7 @@ class SectionParsingTest extends ParserTestCase
         $parser = $this->parseFixture('edge-cases/bold-faq.txt');
         $this->assertStringContainsString(
             'double asterisks',
-            $parser->faq['Does this use bold headings?']
+            $parser->faq['Does this use bold headings?'],
         );
     }
 
@@ -218,7 +218,7 @@ class SectionParsingTest extends ParserTestCase
     #[Test]
     public function it_parses_screenshots_into_indexed_array(): void
     {
-        $parser = $this->parseFixture('valid/standard.txt');
+        $parser = $this->parseFixtureReal('valid/standard.txt');
         $this->assertArrayHasKey(1, $parser->screenshots);
         $this->assertArrayHasKey(2, $parser->screenshots);
     }
@@ -226,7 +226,7 @@ class SectionParsingTest extends ParserTestCase
     #[Test]
     public function it_starts_screenshot_index_at_one(): void
     {
-        $parser = $this->parseFixture('valid/standard.txt');
+        $parser = $this->parseFixtureReal('valid/standard.txt');
         $this->assertArrayNotHasKey(0, $parser->screenshots);
         $this->assertStringContainsString('settings page', $parser->screenshots[1]);
     }
@@ -234,7 +234,7 @@ class SectionParsingTest extends ParserTestCase
     #[Test]
     public function it_removes_screenshots_from_sections_after_parsing(): void
     {
-        $parser = $this->parseFixture('valid/standard.txt');
+        $parser = $this->parseFixtureReal('valid/standard.txt');
         $this->assertArrayNotHasKey('screenshots', $parser->sections);
     }
 
@@ -280,6 +280,6 @@ class SectionParsingTest extends ParserTestCase
     {
         $parser = $this->parseFixture('valid/standard.txt');
         $this->assertArrayNotHasKey('trimmed_section_description', $parser->warnings);
-        $this->assertArrayNotHasKey('trimmed_section_changelog',   $parser->warnings);
+        $this->assertArrayNotHasKey('trimmed_section_changelog', $parser->warnings);
     }
 }

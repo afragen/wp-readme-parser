@@ -3,8 +3,9 @@
 declare(strict_types=1);
 
 /**
- * @copyright 2026 Andy Fragen
+ * @copyright 2024 Andy Fragen
  * @license   MIT
+ *
  * @link      https://github.com/afragen/wp-readme-parser
  */
 
@@ -31,6 +32,7 @@ use Fragen\WP_Readme_Parser\Contracts\MarkdownConverterInterface;
  *  - The WP_CORE_STABLE_BRANCH upper-bound check on "Tested up to" is not enforced.
  *
  * @package Fragen\WP_Readme_Parser
+ *
  * @license MIT
  */
 class Parser
@@ -39,22 +41,37 @@ class Parser
     // Public result properties
     // -------------------------------------------------------------------------
 
-    public string|false $name         = '';
-    public array  $tags              = [];
-    public string $requires          = '';
-    public string $tested            = '';
-    public string $requires_php      = '';
-    public array  $contributors      = [];
-    public string $stable_tag        = '';
-    public string $donate_link       = '';
+    public string|false $name = '';
+
+    public array  $tags = [];
+
+    public string $requires = '';
+
+    public string $tested = '';
+
+    public string $requires_php = '';
+
+    public array  $contributors = [];
+
+    public string $stable_tag = '';
+
+    public string $donate_link = '';
+
     public string $short_description = '';
-    public string $license           = '';
-    public string $license_uri       = '';
-    public array  $sections          = [];
-    public array  $upgrade_notice    = [];
-    public array  $screenshots       = [];
-    public array  $faq               = [];
-    public string $raw_contents      = '';
+
+    public string $license = '';
+
+    public string $license_uri = '';
+
+    public array  $sections = [];
+
+    public array  $upgrade_notice = [];
+
+    public array  $screenshots = [];
+
+    public array  $faq = [];
+
+    public string $raw_contents = '';
 
     /**
      * Screenshot asset URLs, keyed by filename (e.g. 'screenshot-1.png' => 'https://…').
@@ -137,6 +154,7 @@ class Parser
     // -------------------------------------------------------------------------
 
     private HtmlSanitizerInterface    $sanitizerAdapter;
+
     private MarkdownConverterInterface $markdownAdapter;
 
     // -------------------------------------------------------------------------
@@ -144,11 +162,11 @@ class Parser
     // -------------------------------------------------------------------------
 
     /**
-     * @param string                          $input     A file path, URL, or the raw contents of a readme.
-     * @param HtmlSanitizerInterface|null     $sanitizer Custom HTML sanitizer; defaults to the Symfony adapter.
-     * @param MarkdownConverterInterface|null $markdown  Custom Markdown converter; defaults to the Parsedown adapter.
-     * @param array<string, string>           $assets    Screenshot asset map: filename → URL (e.g. ['screenshot-1.png' => 'https://…']).
-     *                                                   Used by screenshotsAsList(). Leave empty to skip image rendering.
+     * @param string $input A file path, URL, or the raw contents of a readme.
+     * @param HtmlSanitizerInterface|null $sanitizer Custom HTML sanitizer; defaults to the Symfony adapter.
+     * @param MarkdownConverterInterface|null $markdown Custom Markdown converter; defaults to the Parsedown adapter.
+     * @param array<string, string> $assets Screenshot asset map: filename → URL (e.g. ['screenshot-1.png' => 'https://…']).
+     *                                      Used by screenshotsAsList(). Leave empty to skip image rendering.
      */
     public function __construct(
         string $input = '',
@@ -167,9 +185,7 @@ class Parser
         $looksLikePath = strlen($input) <= PHP_MAXPATHLEN && !str_contains($input, "\n");
 
         if (
-            ($looksLikePath && file_exists($input)) ||
-            $this->isRemoteUrl($input) ||
-            preg_match('!^data:text/plain!i', $input)
+            ($looksLikePath && file_exists($input)) || $this->isRemoteUrl($input) || preg_match('!^data:text/plain!i', $input)
         ) {
             $this->parseFile($input);
         } else {
@@ -232,7 +248,7 @@ class Parser
         if (str_starts_with($lines[0] ?? '', "\xFF\xFE")) {
             $lines = array_map(
                 fn($l) => mb_convert_encoding($l, 'UTF-8', 'UTF-16'),
-                $lines
+                $lines,
             );
         }
 
@@ -244,7 +260,7 @@ class Parser
         if ($this->parsePossibleHeader($line, onlyValid: true)) {
             array_unshift($lines, $line);
             $this->warnings['invalid_plugin_name_header'] = true;
-            $this->name = false;
+            $this->name                                   = false;
         }
 
         // Strip GitHub-style underline (=== or ---).
@@ -255,7 +271,7 @@ class Parser
         // Handle readmes that literally say "=== Plugin Name ===" as the title.
         if (strtolower((string) $this->name) === 'plugin name') {
             $this->warnings['invalid_plugin_name_header'] = true;
-            $this->name = false;
+            $this->name                                   = false;
 
             $line = $this->getFirstNonWhitespace($lines);
 
@@ -303,9 +319,11 @@ class Parser
         // --- Short description ---
         while (($line = array_shift($lines)) !== null) {
             $trimmed = trim($line);
+
             if ($trimmed === '') {
                 continue;
             }
+
             if ($this->isH2Heading($trimmed)) {
                 array_unshift($lines, $line);
                 break;
@@ -316,7 +334,7 @@ class Parser
 
         // --- Body sections ---
         $this->sections = array_fill_keys($this->expected_sections, '');
-        $current = $sectionName = $sectionTitle = '';
+        $current        = $sectionName = $sectionTitle = '';
 
         while (($line = array_shift($lines)) !== null) {
             $trimmed = trim($line);
@@ -341,8 +359,8 @@ class Parser
                 }
 
                 if (!in_array($sectionName, $this->expected_sections, true)) {
-                    $current     .= '<h3>' . $sectionTitle . '</h3>';
-                    $sectionName  = 'other_notes';
+                    $current .= '<h3>' . $sectionTitle . '</h3>';
+                    $sectionName = 'other_notes';
                 }
                 continue;
             }
@@ -377,11 +395,13 @@ class Parser
         // Enforce word limits on sections.
         foreach ($this->sections as $section => $content) {
             $limitKey = "section-{$section}";
+
             if (!isset($this->maximum_field_lengths[$limitKey])) {
                 $limitKey = 'section';
             }
 
             $trimmed = $this->trimLength($content, $limitKey, 'words');
+
             if ($content !== $trimmed) {
                 $this->warnings["trimmed_section_{$section}"] = true;
             }
@@ -401,7 +421,7 @@ class Parser
 
         // Short description fallback from rendered description.
         if (!$this->short_description && !empty($this->sections['description'])) {
-            $filtered = array_filter(explode("\n", $this->sections['description']));
+            $filtered                                       = array_filter(explode("\n", $this->sections['description']));
             $this->short_description                        = reset($filtered);
             $this->warnings['no_short_description_present'] = true;
         }
@@ -411,6 +431,7 @@ class Parser
         $this->short_description = $this->parseMarkdown($this->short_description);
         $this->short_description = strip_tags($this->short_description);
         $trimmedShort            = $this->trimLength($this->short_description, 'short_description');
+
         if ($trimmedShort !== $this->short_description) {
             if (empty($this->warnings['no_short_description_present'])) {
                 $this->warnings['trimmed_short_description'] = true;
@@ -421,8 +442,10 @@ class Parser
         // Screenshots → indexed array.
         if (isset($this->sections['screenshots'])) {
             preg_match_all('#<li>(.*?)</li>#is', $this->sections['screenshots'], $matches, PREG_SET_ORDER);
+
             if ($matches) {
                 $i = 1;
+
                 foreach ($matches as $match) {
                     $this->screenshots[$i++] = $this->filterHtml($match[1]);
                 }
@@ -439,8 +462,9 @@ class Parser
 
             if ($this->faq) {
                 $this->sections['faq'] .= "\n<dl>\n";
+
                 foreach ($this->faq as $question => $answer) {
-                    $slug                   = rawurlencode(trim(strtolower($question)));
+                    $slug = rawurlencode(trim(strtolower($question)));
                     $this->sections['faq'] .= "<dt id='{$slug}'><h3>{$question}</h3></dt>\n<dd>{$answer}</dd>\n";
                 }
                 $this->sections['faq'] .= "\n</dl>\n";
@@ -469,8 +493,8 @@ class Parser
         }
 
         [$key, $value] = explode(':', $line, 2);
-        $key   = strtolower(trim($key, " \t*-\r\n"));
-        $value = trim($value, " \t*-\r\n");
+        $key           = strtolower(trim($key, " \t*-\r\n"));
+        $value         = trim($value, " \t*-\r\n");
 
         if ($onlyValid && !isset($this->valid_headers[$key])) {
             return false;
@@ -488,14 +512,15 @@ class Parser
             $tags = $this->splitCsvHeader($headers['tags']);
 
             $ignored = array_values(array_intersect($tags, $this->ignore_tags));
+
             if ($ignored) {
                 $this->warnings['ignored_tags'] = $ignored;
-                $tags = array_values(array_diff($tags, $this->ignore_tags));
+                $tags                           = array_values(array_diff($tags, $this->ignore_tags));
             }
 
             if (count($tags) > 5) {
                 $this->warnings['too_many_tags'] = array_slice($tags, 5);
-                $tags = array_slice($tags, 0, 5);
+                $tags                            = array_slice($tags, 0, 5);
             }
 
             $this->tags = $tags;
@@ -504,27 +529,34 @@ class Parser
         if (!empty($headers['requires'])) {
             $this->requires = $this->sanitizeRequiresVersion($headers['requires']);
         }
+
         if (!empty($headers['tested'])) {
             $this->tested = $this->sanitizeTestedVersion($headers['tested']);
         }
+
         if (!empty($headers['requires_php'])) {
             $this->requires_php = $this->sanitizeRequiresPhp($headers['requires_php']);
         }
+
         if (!empty($headers['contributors'])) {
             $this->contributors = $this->sanitizeContributors(
-                $this->splitCsvHeader($headers['contributors'])
+                $this->splitCsvHeader($headers['contributors']),
             );
         }
+
         if (!empty($headers['stable_tag'])) {
             $this->stable_tag = $this->sanitizeStableTag($headers['stable_tag']);
         }
+
         if (!empty($headers['donate_link'])) {
             $url = $headers['donate_link'];
+
             // Accept only safe http/https URLs; silently discard anything else.
             if (preg_match('!^https?://!i', $url)) {
                 $this->donate_link = $url;
             }
         }
+
         if (!empty($headers['license'])) {
             // Extract a trailing URL from the license field if no separate URI was given.
             if (empty($headers['license_uri']) && preg_match('!(https?://\S+)!i', $headers['license'], $url)) {
@@ -533,6 +565,7 @@ class Parser
             }
             $this->license = $headers['license'];
         }
+
         if (!empty($headers['license_uri'])) {
             $this->license_uri = $headers['license_uri'];
         }
@@ -542,6 +575,7 @@ class Parser
             $this->warnings['license_missing'] = true;
         } else {
             $result = $this->validateLicense($this->license);
+
             if ($result !== true) {
                 $this->warnings[$result] = $this->license;
             }
@@ -586,7 +620,7 @@ class Parser
     protected function sanitizeStableTag(string $stableTag): string
     {
         $stableTag = trim($stableTag, "\"' ");
-        $stableTag = preg_replace('!^/?tags/!i', '', $stableTag) ?? $stableTag;
+        $stableTag = preg_replace('!^/?tags/!i', '', $stableTag)     ?? $stableTag;
         $stableTag = preg_replace('![^a-z0-9_.-]!i', '', $stableTag) ?? $stableTag;
 
         if (str_starts_with($stableTag, '.')) {
@@ -602,6 +636,7 @@ class Parser
 
         if ($version && !preg_match('!^\d+(\.\d+){1,2}$!', $version)) {
             $this->warnings['requires_php_header_ignored'] = true;
+
             return '';
         }
 
@@ -613,7 +648,7 @@ class Parser
         return $this->sanitizeVersionHeader(
             $version,
             ['WordPress', 'WP'],
-            'tested_header_ignored'
+            'tested_header_ignored',
         );
     }
 
@@ -622,7 +657,7 @@ class Parser
         return $this->sanitizeVersionHeader(
             $version,
             ['WordPress', 'WP', 'or higher', 'and above', '+'],
-            'requires_header_ignored'
+            'requires_header_ignored',
         );
     }
 
@@ -632,9 +667,9 @@ class Parser
      * pre-release suffixes (e.g. `-RC1`), then validates the remainder as
      * `x.y` or `x.y.z`. Sets $warningKey and returns '' if validation fails.
      *
-     * @param string   $version     Raw header value.
+     * @param string $version Raw header value.
      * @param string[] $stripPhrases Case-insensitive phrases to remove before validation.
-     * @param string   $warningKey  Warning array key to set on failure.
+     * @param string $warningKey Warning array key to set on failure.
      */
     private function sanitizeVersionHeader(
         string $version,
@@ -651,10 +686,11 @@ class Parser
 
         // Strip pre-release suffixes (-alpha, -RC1, -beta2, …).
         [$version] = explode('-', $version);
-        $version = trim($version);
+        $version   = trim($version);
 
         if (!preg_match('!^\d+\.\d(\.\d+)?$!', $version)) {
             $this->warnings[$warningKey] = true;
+
             return '';
         }
 
@@ -675,7 +711,8 @@ class Parser
             $s = strtolower($s);
             $s = str_replace(['licence', 'clauses', 'creative commons'], ['license', 'clause', 'cc'], $s);
             $s = preg_replace('/(version |v)([0-9])/i', '$2', $s) ?? $s;
-            $s = preg_replace('/(\s*[^a-z0-9. ]+\s*)/i', '', $s) ?? $s;
+            $s = preg_replace('/(\s*[^a-z0-9. ]+\s*)/i', '', $s)  ?? $s;
+
             return (string) preg_replace('/\s+/', '', $s);
         };
 
@@ -744,6 +781,7 @@ class Parser
 
         // Decide whether headings are Markdown/wiki-style or bold-style (**text**).
         $headingStyle = 'bold';
+
         foreach ($trimmedLines as $t) {
             if ($t && ($t[0] === '#' || $t[0] === '=')) {
                 $headingStyle = 'heading';
@@ -833,7 +871,8 @@ class Parser
      *   profile      — protocol-relative URL to the contributor's WP.org profile.
      *   avatar       — URL to the contributor's WP.org avatar image.
      *
-     * @param  string[] $slugs Contributor slugs (already sanitized by the parser).
+     * @param string[] $slugs Contributor slugs (already sanitized by the parser).
+     *
      * @return array<string, array{display_name: string, profile: string, avatar: string}>
      */
     public function createContributors(array $slugs): array
@@ -860,7 +899,8 @@ class Parser
      *
      * Returns $data unchanged when no FAQ entries are present.
      *
-     * @param  array<string, mixed> $data Parsed readme data array.
+     * @param array<string, mixed> $data Parsed readme data array.
+     *
      * @return array<string, mixed>
      */
     public function faqAsH4(array $data): array
@@ -870,6 +910,7 @@ class Parser
         }
 
         $html = '';
+
         foreach ($data['faq'] as $question => $answer) {
             $html .= "<h4>{$question}</h4>\n{$answer}\n";
         }
@@ -891,8 +932,9 @@ class Parser
      * Sections that already contain <h4> elements are skipped to avoid
      * double-processing.
      *
-     * @param  string               $section Key of the section to process (e.g. 'changelog').
-     * @param  array<string, mixed> $data    Parsed readme data array.
+     * @param string $section Key of the section to process (e.g. 'changelog').
+     * @param array<string, mixed> $data Parsed readme data array.
+     *
      * @return array<string, mixed>
      */
     public function readmeSectionAsH4(string $section, array $data): array
@@ -906,7 +948,7 @@ class Parser
         $replaced = preg_replace(
             '/<p>=([^=]+)=<\/p>/',
             '<h4>$1</h4>',
-            $content
+            $content,
         );
 
         // preg_replace returns null only on a regex error; fall back to original content.
@@ -929,7 +971,8 @@ class Parser
      *
      * All URLs and caption text are HTML-encoded before output.
      *
-     * @param  array<string, mixed> $data Parsed readme data array.
+     * @param array<string, mixed> $data Parsed readme data array.
+     *
      * @return array<string, mixed>
      */
     public function screenshotsAsList(array $data): array
@@ -939,18 +982,20 @@ class Parser
         }
 
         $items = '';
+
         foreach ($data['screenshots'] as $index => $caption) {
             $url = $this->findScreenshotAsset((int) $index);
+
             if ($url === null) {
                 continue;
             }
 
             $safeUrl     = $this->encode($url);
             $safeCaption = $this->encode($caption);
-            $items      .= "<li>"
+            $items .= '<li>'
                          . "<a href=\"{$safeUrl}\"><img src=\"{$safeUrl}\" alt=\"{$safeCaption}\"></a>"
                          . "<p>{$safeCaption}</p>"
-                         . "</li>";
+                         . '</li>';
         }
 
         if ($items === '') {
@@ -968,7 +1013,8 @@ class Parser
      * Looks for a key in $this->assets that begins with `screenshot-{index}`
      * (e.g. `screenshot-1.png`, `screenshot-1.jpg`).
      *
-     * @param  int         $index 1-based screenshot number.
+     * @param int $index 1-based screenshot number.
+     *
      * @return string|null URL if found, null otherwise.
      */
     private function findScreenshotAsset(int $index): ?string
@@ -1057,9 +1103,7 @@ class Parser
         }
 
         if (
-            $trimmed[0] === '#' &&
-            isset($trimmed[1]) && $trimmed[1] === '#' &&
-            isset($trimmed[2]) && $trimmed[2] !== '#'
+            $trimmed[0] === '#' && isset($trimmed[1]) && $trimmed[1] === '#' && isset($trimmed[2]) && $trimmed[2] !== '#'
         ) {
             return true;
         }
@@ -1070,9 +1114,9 @@ class Parser
     /**
      * Trim content to a maximum length by character count or word count.
      *
-     * @param string     $text   Text to trim.
+     * @param string $text Text to trim.
      * @param string|int $length Named key in $maximum_field_lengths, or a raw integer.
-     * @param string     $type   'char' or 'words'.
+     * @param string $type 'char' or 'words'.
      */
     protected function trimLength(string $text, string|int $length = 150, string $type = 'char'): string
     {
@@ -1108,11 +1152,12 @@ class Parser
         }
 
         // Truncate and append ellipsis first, then check for a cleaner sentence boundary.
-        $text = mb_substr($text, 0, $length) . ' &hellip;';
-        $pos  = mb_strrpos($text, '.');
+        $ellipsis = ' &hellip;';
+        $text     = mb_substr($text, 0, $length - mb_strlen($ellipsis)) . $ellipsis;
+        $pos      = mb_strrpos($text, '.');
 
         // If a sentence ends within the last 20% of the allowed length, trim to it instead.
-        if ($pos !== false && $pos > (int) round(0.8 * $length) && mb_substr($text, -1) !== '.') {
+        if ($pos !== false && $pos >= (int) round(0.8 * $length) && mb_substr($text, -1) !== '.') {
             $text = mb_substr($text, 0, $pos + 1);
         }
 

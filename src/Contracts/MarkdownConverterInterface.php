@@ -5,6 +5,7 @@ declare(strict_types=1);
 /**
  * @copyright 2024 Andy Fragen
  * @license   MIT
+ *
  * @link      https://github.com/afragen/wp-readme-parser
  */
 

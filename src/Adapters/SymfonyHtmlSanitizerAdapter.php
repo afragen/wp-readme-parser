@@ -5,6 +5,7 @@ declare(strict_types=1);
 /**
  * @copyright 2024 Andy Fragen
  * @license   MIT
+ *
  * @link      https://github.com/afragen/wp-readme-parser
  */
 
@@ -27,7 +28,7 @@ class SymfonyHtmlSanitizerAdapter implements HtmlSanitizerInterface
     public function __construct()
     {
         $config = (new HtmlSanitizerConfig())
-            ->allowElement('a',          ['href', 'title', 'rel'])
+            ->allowElement('a', ['href', 'title', 'rel'])
             ->allowElement('blockquote', ['cite'])
             ->allowElement('br')
             ->allowElement('p')
@@ -38,7 +39,7 @@ class SymfonyHtmlSanitizerAdapter implements HtmlSanitizerInterface
             ->allowElement('ul')
             ->allowElement('ol')
             ->allowElement('dl')
-            ->allowElement('dt',         ['id'])
+            ->allowElement('dt', ['id'])
             ->allowElement('dd')
             ->allowElement('li')
             ->allowElement('h3')

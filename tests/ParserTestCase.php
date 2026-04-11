@@ -77,6 +77,7 @@ abstract class ParserTestCase extends TestCase
     {
         $path = __DIR__ . '/fixtures/' . $relative;
         self::assertFileExists($path, "Fixture not found: {$path}");
+
         return $this->parse(file_get_contents($path));
     }
 
@@ -87,6 +88,7 @@ abstract class ParserTestCase extends TestCase
     {
         $path = __DIR__ . '/fixtures/' . $relative;
         self::assertFileExists($path, "Fixture not found: {$path}");
+
         return $this->parseReal(file_get_contents($path));
     }
 
@@ -97,14 +99,14 @@ abstract class ParserTestCase extends TestCase
     /**
      * Quickly build a minimal valid readme string with optional overrides.
      *
-     * @param array<string, string> $headers  Extra header lines (e.g. ['Stable tag' => '1.0.0']).
-     * @param string                $body     Everything after the header block.
-     * @param string                $name     Plugin name in the title line.
+     * @param array<string, string> $headers Extra header lines (e.g. ['Stable tag' => '1.0.0']).
+     * @param string $body Everything after the header block.
+     * @param string $name Plugin name in the title line.
      */
     protected function makeReadme(
         array  $headers = [],
-        string $body    = 'Short description.',
-        string $name    = 'Test Plugin',
+        string $body = 'Short description.',
+        string $name = 'Test Plugin',
     ): string {
         $defaults = [
             'License' => 'MIT',
@@ -113,6 +115,7 @@ abstract class ParserTestCase extends TestCase
         $merged = array_merge($defaults, $headers);
 
         $headerLines = '';
+
         foreach ($merged as $key => $value) {
             $headerLines .= "{$key}: {$value}\n";
         }

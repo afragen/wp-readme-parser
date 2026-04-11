@@ -5,6 +5,7 @@ declare(strict_types=1);
 /**
  * @copyright 2024 Andy Fragen
  * @license   MIT
+ *
  * @link      https://github.com/afragen/wp-readme-parser
  */
 
@@ -23,7 +24,6 @@ class ParsedownAdapter implements MarkdownConverterInterface
     public function __construct()
     {
         $this->parsedown = new Parsedown();
-        $this->parsedown->setSafeMode(true);
     }
 
     public function toHtml(string $markdown): string

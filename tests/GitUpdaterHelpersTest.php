@@ -26,9 +26,9 @@ class GitUpdaterHelpersTest extends ParserTestCase
         $data   = $parser->parseData();
 
         foreach (['name', 'tags', 'requires', 'tested', 'requires_php', 'contributors',
-                  'stable_tag', 'donate_link', 'short_description', 'license', 'license_uri',
-                  'sections', 'upgrade_notice', 'screenshots', 'faq', 'warnings', 'raw_contents',
-                  'assets'] as $key) {
+            'stable_tag', 'donate_link', 'short_description', 'license', 'license_uri',
+            'sections', 'upgrade_notice', 'screenshots', 'faq', 'warnings', 'raw_contents',
+            'assets'] as $key) {
             $this->assertArrayHasKey($key, $data, "parseData() must include '{$key}'");
         }
     }
@@ -40,11 +40,11 @@ class GitUpdaterHelpersTest extends ParserTestCase
         $data   = $parser->parseData();
 
         // standard.txt has contributors: jsmith, jane-doe
-        $this->assertArrayHasKey('jsmith',    $data['contributors']);
-        $this->assertArrayHasKey('jane-doe',  $data['contributors']);
+        $this->assertArrayHasKey('jsmith', $data['contributors']);
+        $this->assertArrayHasKey('jane-doe', $data['contributors']);
         $this->assertArrayHasKey('display_name', $data['contributors']['jsmith']);
-        $this->assertArrayHasKey('profile',      $data['contributors']['jsmith']);
-        $this->assertArrayHasKey('avatar',       $data['contributors']['jsmith']);
+        $this->assertArrayHasKey('profile', $data['contributors']['jsmith']);
+        $this->assertArrayHasKey('avatar', $data['contributors']['jsmith']);
     }
 
     #[Test]
@@ -62,11 +62,11 @@ class GitUpdaterHelpersTest extends ParserTestCase
     {
         // The section heading `= 1.2.3 =` inside changelog is rendered by Parsedown
         // as `<p>=1.2.3=</p>`; readmeSectionAsH4 should promote it to `<h4>`.
-        $parser = $this->parseFixture('valid/standard.txt');
+        $parser = $this->parseFixtureReal('valid/standard.txt');
         $data   = $parser->parseData();
 
         // After conversion we expect no bare `<p>=…=</p>` patterns.
-        $this->assertStringNotMatchesFormat('%A<p>=%A=%A</p>%A', $data['sections']['changelog']);
+        $this->assertStringNotContainsString('<p>=', $data['sections']['changelog']);
     }
 
     // -------------------------------------------------------------------------
@@ -79,7 +79,7 @@ class GitUpdaterHelpersTest extends ParserTestCase
         $parser = new Parser();
         $result = $parser->createContributors(['alice', 'bob-smith']);
 
-        $this->assertArrayHasKey('alice',     $result);
+        $this->assertArrayHasKey('alice', $result);
         $this->assertArrayHasKey('bob-smith', $result);
     }
 
@@ -189,7 +189,7 @@ class GitUpdaterHelpersTest extends ParserTestCase
     #[Test]
     public function readme_section_as_h4_does_not_double_convert_existing_h4(): void
     {
-        $parser  = $this->parse($this->makeReadme());
+        $parser   = $this->parse($this->makeReadme());
         $original = "<h4>Already converted</h4>\n<p>Content.</p>";
         $data     = ['sections' => ['changelog' => $original]];
 
@@ -213,9 +213,9 @@ class GitUpdaterHelpersTest extends ParserTestCase
     {
         // A heading that itself contains '=' characters (e.g. a version like '1.0=beta')
         // should not be swallowed by the inner [^=]+ pattern.
-        $parser  = $this->parse($this->makeReadme());
-        $data    = ['sections' => ['changelog' => "<p>= 1.0.0 =</p>\n<p>= 2.0.0 =</p>"]];
-        $result  = $parser->readmeSectionAsH4('changelog', $data);
+        $parser = $this->parse($this->makeReadme());
+        $data   = ['sections' => ['changelog' => "<p>= 1.0.0 =</p>\n<p>= 2.0.0 =</p>"]];
+        $result = $parser->readmeSectionAsH4('changelog', $data);
 
         // Both headings must be independently converted.
         $this->assertSame(2, substr_count($result['sections']['changelog'], '<h4>'));
@@ -250,14 +250,14 @@ class GitUpdaterHelpersTest extends ParserTestCase
         $parser = new Parser(
             __DIR__ . '/fixtures/valid/screenshots-assets.txt',
             $this->passThroughSanitizer(),
-            $this->passThroughMarkdown(),
-            $assets
+            null,
+            $assets,
         );
         $data = $parser->parseData();
 
-        $this->assertStringContainsString('<ol>',    $data['sections']['screenshots']);
-        $this->assertStringContainsString('<li>',    $data['sections']['screenshots']);
-        $this->assertStringContainsString('<img',    $data['sections']['screenshots']);
+        $this->assertStringContainsString('<ol>', $data['sections']['screenshots']);
+        $this->assertStringContainsString('<li>', $data['sections']['screenshots']);
+        $this->assertStringContainsString('<img', $data['sections']['screenshots']);
         $this->assertStringContainsString('screenshot-1.png', $data['sections']['screenshots']);
     }
 
@@ -273,8 +273,8 @@ class GitUpdaterHelpersTest extends ParserTestCase
         $parser = new Parser(
             __DIR__ . '/fixtures/valid/screenshots-assets.txt',
             $this->passThroughSanitizer(),
-            $this->passThroughMarkdown(),
-            $assets
+            null,
+            $assets,
         );
         $data = $parser->parseData();
 
@@ -292,8 +292,8 @@ class GitUpdaterHelpersTest extends ParserTestCase
         $parser = new Parser(
             __DIR__ . '/fixtures/valid/screenshots-assets.txt',
             $this->passThroughSanitizer(),
-            $this->passThroughMarkdown(),
-            $assets
+            null,
+            $assets,
         );
         $data = $parser->parseData();
 
@@ -320,7 +320,7 @@ class GitUpdaterHelpersTest extends ParserTestCase
             '',
             $this->passThroughSanitizer(),
             $this->passThroughMarkdown(),
-            ['screenshot-1.png' => 'https://example.com/s1.png']
+            ['screenshot-1.png' => 'https://example.com/s1.png'],
         );
 
         $data   = ['screenshots' => [], 'sections' => []];
@@ -339,8 +339,8 @@ class GitUpdaterHelpersTest extends ParserTestCase
         $parser = new Parser(
             __DIR__ . '/fixtures/valid/screenshots-assets.txt',
             $this->passThroughSanitizer(),
-            $this->passThroughMarkdown(),
-            $assets
+            null,
+            $assets,
         );
         $data = $parser->parseData();
 
@@ -356,7 +356,7 @@ class GitUpdaterHelpersTest extends ParserTestCase
             __DIR__ . '/fixtures/valid/screenshots-assets.txt',
             $this->passThroughSanitizer(),
             $this->passThroughMarkdown(),
-            ['banner-1544x500.png' => 'https://example.com/banner.png']
+            ['banner-1544x500.png' => 'https://example.com/banner.png'],
         );
         $data = $parser->parseData();
 

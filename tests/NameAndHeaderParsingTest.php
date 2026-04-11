@@ -186,7 +186,7 @@ class NameAndHeaderParsingTest extends ParserTestCase
         $this->assertNotContains('plugin', $parser->tags);
         $this->assertNotContains('wordpress', $parser->tags);
         $this->assertArrayHasKey('ignored_tags', $parser->warnings);
-        $this->assertContains('plugin',    $parser->warnings['ignored_tags']);
+        $this->assertContains('plugin', $parser->warnings['ignored_tags']);
         $this->assertContains('wordpress', $parser->warnings['ignored_tags']);
     }
 

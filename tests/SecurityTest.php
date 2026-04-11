@@ -30,21 +30,21 @@ class SecurityTest extends ParserTestCase
         $this->assertSame(
             '',
             $parser->donate_link,
-            "Expected donate_link to be empty for unsafe URL: {$url}"
+            "Expected donate_link to be empty for unsafe URL: {$url}",
         );
     }
 
     public static function unsafeDonateUrlProvider(): array
     {
         return [
-            'javascript scheme'   => ['javascript:alert(document.cookie)'],
-            'vbscript scheme'     => ['vbscript:msgbox("xss")'],
-            'data URI HTML'       => ['data:text/html,<script>alert(1)</script>'],
-            'data URI base64'     => ['data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg=='],
-            'protocol-relative'   => ['//evil.example.com/steal'],
-            'no scheme'           => ['evil.example.com'],
-            'ftp scheme'          => ['ftp://files.example.com/readme.txt'],
-            'file scheme'         => ['file:///etc/passwd'],
+            'javascript scheme' => ['javascript:alert(document.cookie)'],
+            'vbscript scheme'   => ['vbscript:msgbox("xss")'],
+            'data URI HTML'     => ['data:text/html,<script>alert(1)</script>'],
+            'data URI base64'   => ['data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg=='],
+            'protocol-relative' => ['//evil.example.com/steal'],
+            'no scheme'         => ['evil.example.com'],
+            'ftp scheme'        => ['ftp://files.example.com/readme.txt'],
+            'file scheme'       => ['file:///etc/passwd'],
         ];
     }
 
@@ -88,7 +88,7 @@ class SecurityTest extends ParserTestCase
     public function it_html_encodes_short_description(): void
     {
         $parser = $this->parse(
-            $this->makeReadme(body: "<script>alert(1)</script> A short description.")
+            $this->makeReadme(body: '<script>alert(1)</script> A short description.'),
         );
         $this->assertStringNotContainsString('<script>', $parser->short_description);
     }
@@ -97,7 +97,7 @@ class SecurityTest extends ParserTestCase
     public function it_html_encodes_upgrade_notice_values(): void
     {
         $readme = $this->makeReadme(
-            body: "Desc.\n\n== Upgrade Notice ==\n\n= 1.0.0 =\n<script>alert(1)</script> Upgrade now."
+            body: "Desc.\n\n== Upgrade Notice ==\n\n= 1.0.0 =\n<script>alert(1)</script> Upgrade now.",
         );
         $parser = $this->parse($readme);
 
@@ -119,7 +119,7 @@ class SecurityTest extends ParserTestCase
             __DIR__ . '/fixtures/valid/screenshots-assets.txt',
             $this->passThroughSanitizer(),
             $this->passThroughMarkdown(),
-            $assets
+            $assets,
         );
         $data = $parser->parseData();
 
@@ -135,8 +135,8 @@ class SecurityTest extends ParserTestCase
         $parser = new \Fragen\WP_Readme_Parser\Parser(
             __DIR__ . '/fixtures/valid/screenshots-assets.txt',
             $this->passThroughSanitizer(),
-            $this->passThroughMarkdown(),
-            $assets
+            null,
+            $assets,
         );
         $data = $parser->parseData();
         $html = $data['sections']['screenshots'] ?? '';

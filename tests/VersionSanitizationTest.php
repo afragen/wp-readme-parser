@@ -29,17 +29,17 @@ class VersionSanitizationTest extends ParserTestCase
     public static function requiresVersionProvider(): array
     {
         return [
-            'plain x.y'          => ['6.0',          '6.0'],
-            'x.y.z patch'        => ['6.0.1',         '6.0.1'],
-            'WP prefix'          => ['WP 6.0',        '6.0'],
-            'WordPress prefix'   => ['WordPress 6.0', '6.0'],
-            'or higher suffix'   => ['6.0 or higher', '6.0'],
-            'and above suffix'   => ['6.0 and above', '6.0'],
-            'plus suffix'        => ['6.0+',          '6.0'],
-            'beta stripped'      => ['6.0-beta1',     '6.0'],
-            'RC stripped'        => ['6.0-RC2',       '6.0'],
-            'invalid string'     => ['not-a-version', ''],
-            'major only'         => ['6',             ''],   // must be x.y at minimum
+            'plain x.y'        => ['6.0',          '6.0'],
+            'x.y.z patch'      => ['6.0.1',         '6.0.1'],
+            'WP prefix'        => ['WP 6.0',        '6.0'],
+            'WordPress prefix' => ['WordPress 6.0', '6.0'],
+            'or higher suffix' => ['6.0 or higher', '6.0'],
+            'and above suffix' => ['6.0 and above', '6.0'],
+            'plus suffix'      => ['6.0+',          '6.0'],
+            'beta stripped'    => ['6.0-beta1',     '6.0'],
+            'RC stripped'      => ['6.0-RC2',       '6.0'],
+            'invalid string'   => ['not-a-version', ''],
+            'major only'       => ['6',             ''],   // must be x.y at minimum
         ];
     }
 
@@ -62,24 +62,24 @@ class VersionSanitizationTest extends ParserTestCase
     // -------------------------------------------------------------------------
 
     #[Test]
-    #[DataProvider('testedVersionProvider')]
+    #[DataProvider('validTestedVersionProvider')]
     public function it_sanitizes_tested_version(string $input, string $expected): void
     {
         $parser = $this->parse($this->makeReadme(['Tested up to' => $input]));
         $this->assertSame($expected, $parser->tested);
     }
 
-    public static function testedVersionProvider(): array
+    public static function validTestedVersionProvider(): array
     {
         return [
-            'plain x.y'       => ['6.5',          '6.5'],
-            'x.y.z'           => ['6.5.1',         '6.5.1'],
-            'WP prefix'       => ['WP 6.5',        '6.5'],
+            'plain x.y'        => ['6.5',          '6.5'],
+            'x.y.z'            => ['6.5.1',         '6.5.1'],
+            'WP prefix'        => ['WP 6.5',        '6.5'],
             'WordPress prefix' => ['WordPress 6.5', '6.5'],
-            'RC stripped'     => ['6.5-RC1',       '6.5'],
-            'alpha stripped'  => ['6.5-alpha',     '6.5'],
-            'invalid'         => ['banana',        ''],
-            'major only'      => ['6',             ''],
+            'RC stripped'      => ['6.5-RC1',       '6.5'],
+            'alpha stripped'   => ['6.5-alpha',     '6.5'],
+            'invalid'          => ['banana',        ''],
+            'major only'       => ['6',             ''],
         ];
     }
 
@@ -136,13 +136,13 @@ class VersionSanitizationTest extends ParserTestCase
     public static function stableTagProvider(): array
     {
         return [
-            'plain semver'         => ['1.2.3',       '1.2.3'],
-            'trunk'                => ['trunk',        'trunk'],
-            'quoted trunk'         => ['"trunk"',      'trunk'],
-            'single-quoted trunk'  => ["'trunk'",      'trunk'],
-            'tags/ prefix'         => ['tags/1.2.3',   '1.2.3'],
-            'slash tags/ prefix'   => ['/tags/1.2.3',  '1.2.3'],
-            'leading dot padded'   => ['.5',           '0.5'],
+            'plain semver'           => ['1.2.3',       '1.2.3'],
+            'trunk'                  => ['trunk',        'trunk'],
+            'quoted trunk'           => ['"trunk"',      'trunk'],
+            'single-quoted trunk'    => ["'trunk'",      'trunk'],
+            'tags/ prefix'           => ['tags/1.2.3',   '1.2.3'],
+            'slash tags/ prefix'     => ['/tags/1.2.3',  '1.2.3'],
+            'leading dot padded'     => ['.5',           '0.5'],
             'special chars stripped' => ['1.2!3',      '1.23'],  // ! is stripped
         ];
     }

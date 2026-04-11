@@ -7,7 +7,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
+### Fixed
+- **`trimLength` — short description could exceed 150 characters**: the `' &hellip;'`
+  ellipsis suffix (9 chars) was appended *after* truncating to the 150-char limit,
+  producing output up to 159 characters. Truncation now budgets for the suffix so
+  the final string is always ≤ 150 characters.
+- **`trimLength` — sentence-boundary detection off-by-one**: the boundary check used
+  a strict `>` comparison, so a period landing exactly at the 80 % position (e.g.
+  position 120 of 150) was not treated as a clean sentence end and the ellipsis was
+  appended instead of trimming at the period. Changed to `>=`.
+- **`ParsedownAdapter` safe mode blocked the HTML sanitizer**: `setSafeMode(true)`
+  caused Parsedown to HTML-encode all inline HTML as text, so the Symfony sanitizer
+  never saw raw `<script>`, event-handler attributes, etc. Removed safe mode; the
+  Symfony allowlist sanitizer (`SymfonyHtmlSanitizerAdapter`) is the correct and
+  sufficient security boundary.
+- **`too-many-tags` fixture had exactly 5 non-ignored tags**: after `plugin` and
+  `wordpress` were removed, exactly 5 tags remained, so the `count > 5` guard never
+  fired and the `too_many_tags` warning was never set. Added two additional
+  non-ignored tags to the fixture so the limit is reliably exercised.
+- **Screenshot tests used stub Markdown adapter**: several tests asserted that
+  screenshot captions are populated and passed to `screenshotsAsList()`, but used
+  `passThroughMarkdown()`, which leaves numbered-list items as raw text — no
+  `<li>` tags are produced and the screenshots array stays empty. Affected tests
+  now use the real Parsedown adapter (or `parseFixtureReal` / `parseReal`).
+- **`assertStringNotMatchesFormat` removed in PHPUnit 13**: replaced with
+  `assertStringNotContainsString('<p>=', …)` in the changelog heading test.
+- **`it_handles_whitespace_only_input` false failure**: `assertEmpty($parser->sections)`
+  failed because sections are always initialised with all expected keys (empty strings).
+  Changed to `assertEmpty(array_filter($parser->sections))`.
+- **`composer test` script used system PHPUnit**: changed to `vendor/bin/phpunit
+  --no-coverage` so the project-local PHPUnit 13 is always used and the
+  "no coverage driver" warning does not trigger `failOnWarning`.
+
+- **PHP 8.5 CI failures** — three dependency constraints were tightened to resolve
+  compatibility issues specific to PHP 8.4+/8.5:
+  - `erusev/parsedown` bumped from `^1.7` to `^1.8`. Parsedown 1.8.0 (released
+    February 2026) fixes implicit nullable parameter deprecations introduced in
+    PHP 8.4 that become fatal errors in PHP 8.5.
+  - `phpunit/phpunit` widened from `^11.0` to `^11.5.34 || ^12.0 || ^13.0`.
+    PHPUnit 11 reached end-of-life in February 2026; this constraint lets Composer
+    select the appropriate PHPUnit generation per PHP version (11.x on 8.2–8.3,
+    12.x on 8.2–8.3 if preferred, 13.x on 8.4–8.5).
+  - `symfony/html-sanitizer` widened from `^6.3|^7.0` to `^6.3|^7.0|^8.0`.
+    The 8.0 series (released March 2026, requires PHP 8.4+) is now available and
+    selected on PHP 8.4 and 8.5.
+  - PHP platform constraint narrowed to `>=8.2 <8.6`; PHPUnit 11 requires PHP 8.2,
+    so PHP 8.1 was removed from the supported range.
+  - PHP 8.1 removed from the CI test matrix for the same reason.
+  - `phpstan/phpstan` widened to `^1.11 || ^2.0` to allow the PHPStan 2.x series.
+
+- Relicensed from GPL-2.0-or-later to MIT.
 - Post-processing helper methods (`parseData`, `createContributors`, `faqAsH4`,
   `readmeSectionAsH4`, `screenshotsAsList`) rewritten as original implementations.
 - `screenshotsAsList` now uses a private `findScreenshotAsset()` helper; assets must

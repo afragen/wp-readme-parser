@@ -73,7 +73,7 @@ class EdgeCasesTest extends ParserTestCase
     public function it_handles_whitespace_only_input(): void
     {
         $parser = $this->parse("   \n\n   ");
-        $this->assertEmpty($parser->sections);
+        $this->assertEmpty(array_filter($parser->sections));
     }
 
     #[Test]
