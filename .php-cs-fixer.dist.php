@@ -10,6 +10,7 @@ $finder = Finder::create()
     ->name('*.php');
 
 return (new Config())
+    ->setUnsupportedPhpVersionAllowed(true)
     ->setRiskyAllowed(true)
     ->setRules([
         '@PER-CS2.0'                         => true,

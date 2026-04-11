@@ -43,7 +43,8 @@ class Parser
 
     public string|false $name = '';
 
-    public array  $tags = [];
+    /** @var list<string> */
+    public array $tags = [];
 
     public string $requires = '';
 
@@ -51,7 +52,8 @@ class Parser
 
     public string $requires_php = '';
 
-    public array  $contributors = [];
+    /** @var list<string> */
+    public array $contributors = [];
 
     public string $stable_tag = '';
 
@@ -63,13 +65,17 @@ class Parser
 
     public string $license_uri = '';
 
-    public array  $sections = [];
+    /** @var array<string, string> */
+    public array $sections = [];
 
-    public array  $upgrade_notice = [];
+    /** @var array<string, string> */
+    public array $upgrade_notice = [];
 
-    public array  $screenshots = [];
+    /** @var array<int, string> */
+    public array $screenshots = [];
 
-    public array  $faq = [];
+    /** @var array<string, string> */
+    public array $faq = [];
 
     public string $raw_contents = '';
 
@@ -98,6 +104,8 @@ class Parser
      *   no_short_description_present  — Short description was inferred from the description body.
      *   trimmed_short_description     — Short description was truncated to 150 chars.
      *   trimmed_section_*             — A section was truncated to its word limit.
+     *
+     * @var array<string, bool|string|list<string>>
      */
     public array $warnings = [];
 
@@ -105,7 +113,11 @@ class Parser
     // Configuration
     // -------------------------------------------------------------------------
 
-    /** Sections we always recognise by name. */
+    /**
+     * Sections we always recognise by name.
+     *
+     * @var list<string>
+     */
     protected array $expected_sections = [
         'description',
         'installation',
@@ -116,14 +128,22 @@ class Parser
         'other_notes',
     ];
 
-    /** Section-name aliases: from => to. */
+    /**
+     * Section-name aliases: from => to.
+     *
+     * @var array<string, string>
+     */
     protected array $alias_sections = [
         'frequently_asked_questions' => 'faq',
         'change_log'                 => 'changelog',
         'screenshot'                 => 'screenshots',
     ];
 
-    /** Valid readme header keys (normalised) => property name. */
+    /**
+     * Valid readme header keys (normalised) => property name.
+     *
+     * @var array<string, string>
+     */
     protected array $valid_headers = [
         'tested'            => 'tested',
         'tested up to'      => 'tested',
@@ -138,10 +158,18 @@ class Parser
         'license uri'       => 'license_uri',
     ];
 
-    /** Tags silently removed from the tags list. */
+    /**
+     * Tags silently removed from the tags list.
+     *
+     * @var list<string>
+     */
     protected array $ignore_tags = ['plugin', 'wordpress'];
 
-    /** Maximum lengths for individual fields. */
+    /**
+     * Maximum lengths for individual fields.
+     *
+     * @var array<string, int>
+     */
     protected array $maximum_field_lengths = [
         'short_description' => 150,
         'section'           => 2500,
@@ -505,6 +533,8 @@ class Parser
 
     /**
      * Map parsed header values onto instance properties.
+     *
+     * @param array<string, string> $headers
      */
     protected function applyHeaders(array $headers): void
     {
@@ -597,6 +627,10 @@ class Parser
      * Unlike the original, we do not validate against WordPress.org user accounts.
      * Invalid-looking slugs (containing spaces or disallowed characters) are warned
      * and dropped.
+     *
+     * @param list<string> $users
+     *
+     * @return list<string>
      */
     protected function sanitizeContributors(array $users): array
     {
@@ -767,6 +801,10 @@ class Parser
     /**
      * Parse a section body into an associative array of Heading => Content.
      * Used for FAQ and Upgrade Notice sections.
+     *
+     * @param string|list<string> $lines
+     *
+     * @return array<string, string>
      */
     protected function parseSubSection(string|array $lines): array
     {
@@ -1076,6 +1114,9 @@ class Parser
         return (bool) preg_match('!^https?://!i', $value);
     }
 
+    /**
+     * @param array<int, string> $lines
+     */
     protected function getFirstNonWhitespace(array &$lines): string
     {
         while (($line = array_shift($lines)) !== null) {
