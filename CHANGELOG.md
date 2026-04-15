@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] / 2026-04-15
+
 ### Added
 - `NativeHtmlSanitizerAdapter` — HTML sanitization via PHP's built-in `DOMDocument`,
   enforcing the WP.org `wp_kses()` element/attribute allowlist with no third-party
@@ -85,7 +87,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Header/body parse loops converted from `array_shift` / `array_unshift` (O(n²)) to
   an integer cursor `$i` over a fixed `$lines` array (O(n)).
 
-## [1.0.0] — 2024-01-01
+## [0.1.0] — 2026-04-07
 
 ### Added
 - Initial release — MIT-licensed PHP implementation of the WordPress.org plugin readme parser.
