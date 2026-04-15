@@ -395,6 +395,7 @@ class Parser
         $this->sections = array_filter($this->sections);
 
         // Fallback: use short description as description body.
+        $this->sections['description'] ??= '';
         if (empty($this->sections['description']) && $this->short_description !== '') {
             $this->sections['description'] = $this->short_description;
         }
