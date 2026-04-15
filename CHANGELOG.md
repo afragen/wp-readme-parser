@@ -27,9 +27,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the post-processing methods; no longer needed).
 
 ### Changed
-- Minimum PHP version lowered from 8.2 to 8.0; the 8.2 floor was imposed solely by
-  `symfony/html-sanitizer ^7.0` and is no longer required.
-- CI test matrix extended to PHP 8.0, 8.1, 8.2, 8.3, 8.4, 8.5.
+- Minimum PHP version lowered from 8.2 to 8.1; the 8.2 floor was imposed solely by
+  `symfony/html-sanitizer ^7.0` and is no longer required. PHP 8.0 is excluded
+  because `#[Test]` / `#[DataProvider]` PHPUnit attributes require PHPUnit 10+,
+  which itself requires PHP 8.1.
+- CI test matrix now covers PHP 8.1–8.5 with a per-version PHPUnit pin:
+  8.1 → `^10.5`, 8.2–8.4 → `^11.5`, 8.5 → `^13.0`.
 - `ParsedownAdapter` safe mode changed from `true` to `false` so raw HTML in readme
   content passes through Parsedown to the sanitizer rather than being escaped first.
 - Screenshot captions are now extracted from raw section text before Markdown

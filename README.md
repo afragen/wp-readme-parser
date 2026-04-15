@@ -4,11 +4,11 @@ A PHP library for parsing WordPress plugin `readme.txt` files into structured da
 with no WordPress dependencies.
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![PHP 8.0–8.5](https://img.shields.io/badge/php-8.0--8.5-8892BF.svg)](https://www.php.net/)
+[![PHP 8.1–8.5](https://img.shields.io/badge/php-8.1--8.5-8892BF.svg)](https://www.php.net/)
 
 ## Requirements
 
-- PHP 8.0 – 8.5
+- PHP 8.1 – 8.5
 - Composer
 
 ## Installation
