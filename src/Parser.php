@@ -104,6 +104,9 @@ class Parser
     // Configuration
     // -------------------------------------------------------------------------
 
+    /** Characters stripped when extracting plugin names and section titles from heading lines. */
+    private const HEADING_TRIM = "#= \t\0\x0B";
+
     /** @var string[] Sections we always recognise by name. */
     protected array $expected_sections = [
         'description',
@@ -247,20 +250,23 @@ class Parser
             );
         }
 
+        $lineCount = count($lines);
+        $i         = 0;
+
         // --- Plugin name ---
-        $line       = $this->getFirstNonWhitespace($lines);
-        $this->name = $this->sanitizeText(trim($line, "#= \t\0\x0B"));
+        $line       = $this->getFirstNonWhitespace($lines, $i);
+        $this->name = $this->sanitizeText(trim($line, self::HEADING_TRIM));
 
         // Guard: the first line looked like a header field, not a plugin name.
         if ($this->parsePossibleHeader($line, onlyValid: true)) {
-            array_unshift($lines, $line);
+            $i--;
             $this->warnings['invalid_plugin_name_header'] = true;
             $this->name                                   = false;
         }
 
         // Strip GitHub-style underline (=== or ---).
-        if (!empty($lines) && '' === trim($lines[0] ?? '', '=-')) {
-            array_shift($lines);
+        if ($i < $lineCount && '' === trim($lines[$i], '=-')) {
+            $i++;
         }
 
         // Handle readmes that literally say "=== Plugin Name ===" as the title.
@@ -268,26 +274,33 @@ class Parser
             $this->warnings['invalid_plugin_name_header'] = true;
             $this->name                                   = false;
 
-            $line = $this->getFirstNonWhitespace($lines);
+            $line = $this->getFirstNonWhitespace($lines, $i);
 
             if (strlen($line) < 50 && !$this->parsePossibleHeader($line, onlyValid: true)) {
-                $this->name = $this->sanitizeText(trim($line, "#= \t\0\x0B"));
+                $this->name = $this->sanitizeText(trim($line, self::HEADING_TRIM));
             } else {
-                array_unshift($lines, $line);
+                $i--;
             }
         }
 
         // --- Header block ---
         $headers          = [];
-        $line             = $this->getFirstNonWhitespace($lines);
+        $line             = $this->getFirstNonWhitespace($lines, $i);
         $lastLineWasBlank = false;
 
-        do {
+        while (true) {
             $header = $this->parsePossibleHeader($line);
 
             if (!$header) {
                 if ($line === '') {
                     $lastLineWasBlank = true;
+
+                    // Advance to next line.
+                    if ($i >= $lineCount) {
+                        $line = null;
+                        break;
+                    }
+                    $line = $lines[$i++];
                     continue;
                 }
                 // Non-blank, non-header line → start of the short description.
@@ -304,15 +317,26 @@ class Parser
             }
 
             $lastLineWasBlank = false;
-        } while (($line = array_shift($lines)) !== null);
 
-        array_unshift($lines, $line);
+            // Advance to next line.
+            if ($i >= $lineCount) {
+                $line = null;
+                break;
+            }
+            $line = $lines[$i++];
+        }
+
+        // Put back the line that ended the header block (null means array exhausted).
+        if ($line !== null) {
+            $i--;
+        }
 
         // Populate properties from parsed headers.
         $this->applyHeaders($headers);
 
         // --- Short description ---
-        while (($line = array_shift($lines)) !== null) {
+        while ($i < $lineCount) {
+            $line    = $lines[$i++];
             $trimmed = trim($line);
 
             if ($trimmed === '') {
@@ -320,7 +344,7 @@ class Parser
             }
 
             if ($this->isH2Heading($trimmed)) {
-                array_unshift($lines, $line);
+                $i--;
                 break;
             }
             $this->short_description .= $line . ' ';
@@ -331,7 +355,8 @@ class Parser
         $this->sections = array_fill_keys($this->expected_sections, '');
         $current        = $sectionName = $sectionTitle = '';
 
-        while (($line = array_shift($lines)) !== null) {
+        while ($i < $lineCount) {
+            $line    = $lines[$i++];
             $trimmed = trim($line);
 
             if ($trimmed === '') {
@@ -346,7 +371,7 @@ class Parser
                 }
 
                 $current      = '';
-                $sectionTitle = trim($line, "#= \t");
+                $sectionTitle = trim($line, self::HEADING_TRIM);
                 $sectionName  = strtolower(str_replace(' ', '_', $sectionTitle));
 
                 if (isset($this->alias_sections[$sectionName])) {
@@ -424,9 +449,10 @@ class Parser
         }
 
         // Markdown → HTML.
-        $this->sections       = array_map([$this, 'parseMarkdown'], $this->sections);
-        $this->upgrade_notice = array_map([$this, 'parseMarkdown'], $this->upgrade_notice);
-        $this->faq            = array_map([$this, 'parseMarkdown'], $this->faq);
+        foreach ([&$this->sections, &$this->upgrade_notice, &$this->faq] as &$block) {
+            $block = array_map([$this, 'parseMarkdown'], $block);
+        }
+        unset($block);
 
         // Short description fallback from rendered description.
         if (!$this->short_description && !empty($this->sections['description'])) {
@@ -460,7 +486,7 @@ class Parser
 
                 foreach ($this->faq as $question => $answer) {
                     $slug = rawurlencode(trim(strtolower($question)));
-                    $this->sections['faq'] .= "<dt id='{$slug}'><h3>{$question}</h3></dt>\n<dd>{$answer}</dd>\n";
+                    $this->sections['faq'] .= "<dt id='{$slug}'><h3>" . $this->encode($question) . "</h3></dt>\n<dd>{$answer}</dd>\n";
                 }
                 $this->sections['faq'] .= "\n</dl>\n";
             }
@@ -563,7 +589,7 @@ class Parser
             $this->license = $headers['license'];
         }
 
-        if (!empty($headers['license_uri'])) {
+        if (!empty($headers['license_uri']) && $this->isRemoteUrl($headers['license_uri'])) {
             $this->license_uri = $headers['license_uri'];
         }
 
@@ -702,7 +728,7 @@ class Parser
     // License validation
     // -------------------------------------------------------------------------
 
-    public function validateLicense(string $license): true|string
+    public function validateLicense(string $license): bool|string
     {
         // Normalize keyword lists once per process and cache them.
         static $normalizedCompatible   = null;
@@ -875,11 +901,18 @@ class Parser
     }
 
     /**
+     * Advance $i past any blank lines and return the first non-blank line,
+     * or '' if the end of the array is reached.
+     *
      * @param string[] $lines
      */
-    protected function getFirstNonWhitespace(array &$lines): string
+    protected function getFirstNonWhitespace(array $lines, int &$i): string
     {
-        while (($line = array_shift($lines)) !== null) {
+        $count = count($lines);
+
+        while ($i < $count) {
+            $line = $lines[$i++];
+
             if (trim($line) !== '') {
                 return $line;
             }

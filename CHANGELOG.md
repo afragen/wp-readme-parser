@@ -61,9 +61,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 - `parseFile` (remote URL fetching) now enforces a 10-second timeout, a maximum of
   5 redirects, and a 1 MB response size cap to prevent hangs and memory exhaustion.
-- `donate_link` header now validates that the URL scheme is `http` or `https`; all
-  other schemes (`javascript:`, `data:`, `ftp:`, `file:`, protocol-relative, etc.)
-  are silently discarded.
+- `donate_link` and `license_uri` headers now validate that the URL scheme is `http`
+  or `https`; all other schemes (`javascript:`, `data:`, `ftp:`, `file:`,
+  protocol-relative, etc.) are silently discarded.
+- FAQ question text is now passed through `encode()` (HTML-escaping) before being
+  embedded in the `<dt><h3>` output, preventing XSS via crafted question strings.
 - `sanitizeStableTag` — `preg_replace` calls now use `?? $stableTag` fallback,
   preventing a `TypeError` in strict-types mode if either returns `null`.
 - `preg_split` results guarded throughout with `?: [...]` fallbacks to prevent
@@ -76,6 +78,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CSV header splitting extracted into a private `splitCsvHeader()` helper.
 - `htmlspecialchars(…)` calls extracted into a `protected encode()` helper.
 - Remote URL detection consolidated into a private `isRemoteUrl()` helper.
+- `private const HEADING_TRIM` introduced for the repeated `"#= \t\0\x0B"` trim
+  character-mask, replacing three identical string literals.
+- Three separate `array_map` calls over `$this->sections`, `$this->upgrade_notice`,
+  and `$this->faq` replaced with a single `foreach ([&$block] as …)` loop.
+- Header/body parse loops converted from `array_shift` / `array_unshift` (O(n²)) to
+  an integer cursor `$i` over a fixed `$lines` array (O(n)).
 
 ## [1.0.0] — 2024-01-01
 
