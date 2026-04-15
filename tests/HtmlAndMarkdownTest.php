@@ -16,7 +16,7 @@ use PHPUnit\Framework\Attributes\Test;
  * testing the integration of those libraries, not just the parser's structure.
  *
  * @covers \Fragen\WP_Readme_Parser\Parser
- * @covers \Fragen\WP_Readme_Parser\Adapters\SymfonyHtmlSanitizerAdapter
+ * @covers \Fragen\WP_Readme_Parser\Adapters\NativeHtmlSanitizerAdapter
  * @covers \Fragen\WP_Readme_Parser\Adapters\ParsedownAdapter
  */
 class HtmlAndMarkdownTest extends ParserTestCase

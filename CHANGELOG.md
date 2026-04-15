@@ -7,62 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `NativeHtmlSanitizerAdapter` — HTML sanitization via PHP's built-in `DOMDocument`,
+  enforcing the WP.org `wp_kses()` element/attribute allowlist with no third-party
+  dependencies. Dangerous elements (`script`, `style`, `iframe`, `object`, `embed`,
+  `form`) are dropped with their content; unknown elements are stripped but their
+  text content is preserved.
+
+### Removed
+- `symfony/html-sanitizer` dependency dropped entirely; `NativeHtmlSanitizerAdapter`
+  is now the default, reducing production dependencies to `erusev/parsedown` only.
+- `SymfonyHtmlSanitizerAdapter` removed (pass a custom `HtmlSanitizerInterface`
+  implementation to the constructor if Symfony is preferred).
+- `parseData()`, `createContributors()`, `faqAsH4()`, `readmeSectionAsH4()`,
+  `screenshotsAsList()` removed — post-processing belongs to consuming applications
+  (e.g., `git-updater/Readme_Parser`), keeping `Parser` consistent with the upstream
+  WP.org class interface.
+- `$assets` public property and constructor parameter removed (was added alongside
+  the post-processing methods; no longer needed).
+
+### Changed
+- Minimum PHP version lowered from 8.2 to 8.0; the 8.2 floor was imposed solely by
+  `symfony/html-sanitizer ^7.0` and is no longer required.
+- CI test matrix extended to PHP 8.0, 8.1, 8.2, 8.3, 8.4, 8.5.
+- `ParsedownAdapter` safe mode changed from `true` to `false` so raw HTML in readme
+  content passes through Parsedown to the sanitizer rather than being escaped first.
+- Screenshot captions are now extracted from raw section text before Markdown
+  conversion (regex `^\d+\.\s+(.+)$`) instead of matching `<li>` tags after
+  conversion — fixes extraction when a pass-through Markdown stub is injected.
+- Description fallback no longer sets `sections['description']` to an empty string
+  when `short_description` is also empty (e.g. whitespace-only input).
+- Copyright year updated to 2026.
+- `@var`, `@param`, and `@return` type annotations added to all array-typed
+  properties and methods; resolves PHPStan `missingType.iterableValue` errors
+  introduced when `checkMissingIterableValueType` was removed from PHPStan 2.x.
+
 ### Fixed
-- **`trimLength` — short description could exceed 150 characters**: the `' &hellip;'`
-  ellipsis suffix (9 chars) was appended *after* truncating to the 150-char limit,
-  producing output up to 159 characters. Truncation now budgets for the suffix so
-  the final string is always ≤ 150 characters.
-- **`trimLength` — sentence-boundary detection off-by-one**: the boundary check used
-  a strict `>` comparison, so a period landing exactly at the 80 % position (e.g.
-  position 120 of 150) was not treated as a clean sentence end and the ellipsis was
-  appended instead of trimming at the period. Changed to `>=`.
-- **`ParsedownAdapter` safe mode blocked the HTML sanitizer**: `setSafeMode(true)`
-  caused Parsedown to HTML-encode all inline HTML as text, so the Symfony sanitizer
-  never saw raw `<script>`, event-handler attributes, etc. Removed safe mode; the
-  Symfony allowlist sanitizer (`SymfonyHtmlSanitizerAdapter`) is the correct and
-  sufficient security boundary.
-- **`too-many-tags` fixture had exactly 5 non-ignored tags**: after `plugin` and
-  `wordpress` were removed, exactly 5 tags remained, so the `count > 5` guard never
-  fired and the `too_many_tags` warning was never set. Added two additional
-  non-ignored tags to the fixture so the limit is reliably exercised.
-- **Screenshot tests used stub Markdown adapter**: several tests asserted that
-  screenshot captions are populated and passed to `screenshotsAsList()`, but used
-  `passThroughMarkdown()`, which leaves numbered-list items as raw text — no
-  `<li>` tags are produced and the screenshots array stays empty. Affected tests
-  now use the real Parsedown adapter (or `parseFixtureReal` / `parseReal`).
-- **`assertStringNotMatchesFormat` removed in PHPUnit 13**: replaced with
-  `assertStringNotContainsString('<p>=', …)` in the changelog heading test.
-- **`it_handles_whitespace_only_input` false failure**: `assertEmpty($parser->sections)`
-  failed because sections are always initialised with all expected keys (empty strings).
-  Changed to `assertEmpty(array_filter($parser->sections))`.
-- **`composer test` script used system PHPUnit**: changed to `vendor/bin/phpunit
-  --no-coverage` so the project-local PHPUnit 13 is always used and the
-  "no coverage driver" warning does not trigger `failOnWarning`.
-
-- **PHP 8.5 CI failures** — three dependency constraints were tightened to resolve
-  compatibility issues specific to PHP 8.4+/8.5:
-  - `erusev/parsedown` bumped from `^1.7` to `^1.8`. Parsedown 1.8.0 (released
-    February 2026) fixes implicit nullable parameter deprecations introduced in
-    PHP 8.4 that become fatal errors in PHP 8.5.
-  - `phpunit/phpunit` widened from `^11.0` to `^11.5.34 || ^12.0 || ^13.0`.
-    PHPUnit 11 reached end-of-life in February 2026; this constraint lets Composer
-    select the appropriate PHPUnit generation per PHP version (11.x on 8.2–8.3,
-    12.x on 8.2–8.3 if preferred, 13.x on 8.4–8.5).
-  - `symfony/html-sanitizer` widened from `^6.3|^7.0` to `^6.3|^7.0|^8.0`.
-    The 8.0 series (released March 2026, requires PHP 8.4+) is now available and
-    selected on PHP 8.4 and 8.5.
-  - PHP platform constraint narrowed to `>=8.2 <8.6`; PHPUnit 11 requires PHP 8.2,
-    so PHP 8.1 was removed from the supported range.
-  - PHP 8.1 removed from the CI test matrix for the same reason.
-  - `phpstan/phpstan` widened to `^1.11 || ^2.0` to allow the PHPStan 2.x series.
-
-- Relicensed from GPL-2.0-or-later to MIT.
-- Post-processing helper methods (`parseData`, `createContributors`, `faqAsH4`,
-  `readmeSectionAsH4`, `screenshotsAsList`) rewritten as original implementations.
-- `screenshotsAsList` now uses a private `findScreenshotAsset()` helper; assets must
-  be passed via the `$assets` constructor parameter, not via the data array.
-- `readmeSectionAsH4` regex tightened to `/<p>=([^=]+)=<\/p>/` to prevent
-  greedy matching across multiple headings on adjacent lines.
+- **PHP 8.5 CI failures** — dependency constraints updated for PHP 8.4+/8.5
+  compatibility:
+  - `erusev/parsedown` bumped from `^1.7` to `^1.8` (fixes implicit nullable
+    deprecations fatal in PHP 8.5).
+  - `phpunit/phpunit` widened to `^11.5.34 || ^12.0 || ^13.0`.
+  - `phpstan/phpstan` widened to `^1.11 || ^2.0`.
+- `phpstan.neon` — removed `checkMissingIterableValueType: false` (parameter was
+  removed in PHPStan 2.x and caused an analysis error).
+- `VersionSanitizationTest` — renamed data provider `testedVersionProvider` to
+  `validTestedVersionProvider`; PHPUnit 13 treated the old name as both a data
+  provider and a standalone test method because it began with `test`.
 
 ### Security
 - `parseFile` (remote URL fetching) now enforces a 10-second timeout, a maximum of
@@ -70,32 +61,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `donate_link` header now validates that the URL scheme is `http` or `https`; all
   other schemes (`javascript:`, `data:`, `ftp:`, `file:`, protocol-relative, etc.)
   are silently discarded.
-- `sanitizeStableTag` — both `preg_replace` calls now use `?? $stableTag` fallback,
-  preventing a `TypeError` in strict-types mode if either returns `null` on a regex
-  engine failure.
-- `preg_replace` result in `readmeSectionAsH4` is now null-checked; a regex error
-  falls back to the original unmodified content instead of storing `null`.
-- Removed `@` error suppressor from `preg_split` in `trimLength`; the non-UTF-8
-  fallback now uses `?: [$text]` to guarantee a usable array in all cases.
-- `preg_split` result in `parseContents` is now guarded with `?: [$contents]` to
-  prevent passing `false` to `array_map` on a catastrophic regex failure.
+- `sanitizeStableTag` — `preg_replace` calls now use `?? $stableTag` fallback,
+  preventing a `TypeError` in strict-types mode if either returns `null`.
+- `preg_split` results guarded throughout with `?: [...]` fallbacks to prevent
+  passing `false` to `array_map` on a catastrophic regex failure.
 
-### Refactoring (DRY / efficiency)
-- `public string $name` corrected to `public string|false $name` to match the two
-  code paths that assign `false` when the plugin name header is absent or invalid.
-- `sanitizeTestedVersion` and `sanitizeRequiresVersion` refactored into a single
-  private `sanitizeVersionHeader(string, array, string)` helper; the two public
-  methods now delegate in two lines each.
-- CSV header splitting (`array_values(array_filter(array_map(...explode(','...))))`)
-  extracted into a private `splitCsvHeader(string): array` helper used for both
-  tags and contributors.
-- `htmlspecialchars($x, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')` extracted into a
-  `protected encode(string): string` helper; used by `sanitizeText`,
-  `screenshotsAsList`, and available to subclasses.
-- Duplicate `preg_match('!^https?://!i', ...)` calls (constructor + `parseFile`)
-  consolidated into a private `isRemoteUrl(string): bool` helper.
-- `validateLicense` keyword lists normalized with `static` local variables so the
-  normalization closure runs exactly once per PHP process rather than on every call.
+### Refactoring
+- `public string $name` corrected to `public string|false $name`.
+- `sanitizeTestedVersion` and `sanitizeRequiresVersion` consolidated into a shared
+  private `sanitizeVersionHeader()` helper.
+- CSV header splitting extracted into a private `splitCsvHeader()` helper.
+- `htmlspecialchars(…)` calls extracted into a `protected encode()` helper.
+- Remote URL detection consolidated into a private `isRemoteUrl()` helper.
 
 ## [1.0.0] — 2024-01-01
 
@@ -122,14 +99,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - UTF-8 BOM stripping and UTF-16 LE conversion.
 - `HtmlSanitizerInterface` and `MarkdownConverterInterface` contracts for dependency injection.
 - `SymfonyHtmlSanitizerAdapter` wrapping `symfony/html-sanitizer` ^6.3|^7.0.
-- `ParsedownAdapter` wrapping `erusev/parsedown` ^1.7.
-- `parseData()` — returns all properties as a post-processed array.
-- `createContributors()` — expands slugs into WP.org profile/avatar records.
-- `faqAsH4()` — re-renders FAQ as `<h4>` headings.
-- `readmeSectionAsH4()` — promotes Parsedown-rendered wiki headings to `<h4>`.
-- `screenshotsAsList()` — renders screenshots as a linked `<ol>` from an asset map.
+- `ParsedownAdapter` wrapping `erusev/parsedown` ^1.8.
 - PHPUnit 11 test suite split into focused test classes.
-- GitHub Actions CI on PHP 8.1, 8.2, and 8.3.
+- GitHub Actions CI on PHP 8.2 and 8.3.
 - PHPStan level 6 static analysis.
 - PHP CS Fixer code-style enforcement (PER-CS 2.0).
 

@@ -4,11 +4,11 @@ A PHP library for parsing WordPress plugin `readme.txt` files into structured da
 with no WordPress dependencies.
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![PHP 8.2–8.5](https://img.shields.io/badge/php-8.2--8.5-8892BF.svg)](https://www.php.net/)
+[![PHP 8.0–8.5](https://img.shields.io/badge/php-8.0--8.5-8892BF.svg)](https://www.php.net/)
 
 ## Requirements
 
-- PHP 8.2 – 8.5
+- PHP 8.0 – 8.5
 - Composer
 
 ## Installation
@@ -30,15 +30,12 @@ $parser = new Parser('https://plugins.svn.wordpress.org/my-plugin/trunk/readme.t
 
 // From a raw string
 $parser = new Parser($readmeContents);
-
-// With screenshot assets (for screenshotsAsList())
-$parser = new Parser($readmeContents, assets: [
-    'screenshot-1.png' => 'https://example.com/screenshot-1.png',
-    'screenshot-2.png' => 'https://example.com/screenshot-2.png',
-]);
 ```
 
 ### Parsed properties
+
+The parser exposes the same public properties as the official WordPress.org readme
+parser, making it a drop-in replacement for subclassing.
 
 | Property | Type | Description |
 |---|---|---|
@@ -49,7 +46,7 @@ $parser = new Parser($readmeContents, assets: [
 | `$requires_php` | `string` | Minimum PHP version. |
 | `$contributors` | `string[]` | Contributor slugs (format-validated). |
 | `$stable_tag` | `string` | Stable tag / version string. |
-| `$donate_link` | `string` | Donation URL. |
+| `$donate_link` | `string` | Donation URL (http/https only). |
 | `$license` | `string` | License identifier. |
 | `$license_uri` | `string` | License URL. |
 | `$short_description` | `string` | Plain-text short description, max 150 characters. |
@@ -59,7 +56,6 @@ $parser = new Parser($readmeContents, assets: [
 | `$upgrade_notice` | `array` | Upgrade notices keyed by version string. |
 | `$warnings` | `array` | Parsing anomaly flags — see below. |
 | `$raw_contents` | `string` | Unmodified input. |
-| `$assets` | `array` | Screenshot asset map supplied at construction (filename → URL). |
 
 ### Warning keys
 
@@ -79,33 +75,9 @@ $parser = new Parser($readmeContents, assets: [
 | `trimmed_short_description` | Short description was truncated to 150 characters. |
 | `trimmed_section_*` | A section was truncated to its word limit (2 500 general; 5 000 for `changelog` and `faq`). |
 
-## Post-processing helpers
-
-`parseData()` returns all parsed properties as an array and applies an additional
-pipeline suited to displaying readme content outside of WordPress.org:
-
-```php
-$data = $parser->parseData();
-// $data['contributors'] — enriched with profile/avatar URLs
-// $data['sections']['faq'] — rendered as <h4> headings instead of <dl>
-// $data['sections']['changelog'] — wiki-style = headings converted to <h4>
-// $data['sections']['screenshots'] — rendered as <ol> with linked images
-```
-
-Individual helpers are also available as standalone methods:
-
-| Method | Description |
-|---|---|
-| `parseData()` | Collect all properties into an array and apply the full pipeline. |
-| `createContributors(array $slugs)` | Expand slugs into `display_name` / `profile` / `avatar` records. |
-| `faqAsH4(array $data)` | Re-render FAQ entries as `<h4>` headings. |
-| `readmeSectionAsH4(string $section, array $data)` | Promote Parsedown-rendered `= heading =` patterns to `<h4>`. |
-| `screenshotsAsList(array $data)` | Render screenshot captions as a linked `<ol>` using `$this->assets`. |
-
 ## Dependency injection
 
-The sanitizer and Markdown converter are both injectable, making the parser easy to
-test in isolation or extend:
+The sanitizer and Markdown converter are both injectable:
 
 ```php
 use Fragen\WP_Readme_Parser\Contracts\HtmlSanitizerInterface;
@@ -122,7 +94,7 @@ $parser = new Parser(
 
 | Area | This library | WordPress-native |
 |---|---|---|
-| HTML sanitization | `symfony/html-sanitizer` | `wp_kses()` |
+| HTML sanitization | Native `DOMDocument` (`NativeHtmlSanitizerAdapter`) | `wp_kses()` |
 | Markdown | `erusev/parsedown` | Internal WP.org Markdown class |
 | Contributor validation | Slug format check only | Live `get_user_by()` WP DB query |
 | `Tested up to` upper bound | Not enforced | Capped at `WP_CORE_STABLE_BRANCH + 0.1` |

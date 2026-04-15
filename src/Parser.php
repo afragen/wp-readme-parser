@@ -11,8 +11,8 @@ declare(strict_types=1);
 
 namespace Fragen\WP_Readme_Parser;
 
+use Fragen\WP_Readme_Parser\Adapters\NativeHtmlSanitizerAdapter;
 use Fragen\WP_Readme_Parser\Adapters\ParsedownAdapter;
-use Fragen\WP_Readme_Parser\Adapters\SymfonyHtmlSanitizerAdapter;
 use Fragen\WP_Readme_Parser\Contracts\HtmlSanitizerInterface;
 use Fragen\WP_Readme_Parser\Contracts\MarkdownConverterInterface;
 
@@ -43,8 +43,8 @@ class Parser
 
     public string|false $name = '';
 
-    /** @var list<string> */
-    public array $tags = [];
+    /** @var string[] */
+    public array  $tags = [];
 
     public string $requires = '';
 
@@ -52,8 +52,8 @@ class Parser
 
     public string $requires_php = '';
 
-    /** @var list<string> */
-    public array $contributors = [];
+    /** @var string[] */
+    public array  $contributors = [];
 
     public string $stable_tag = '';
 
@@ -66,26 +66,18 @@ class Parser
     public string $license_uri = '';
 
     /** @var array<string, string> */
-    public array $sections = [];
+    public array  $sections = [];
 
     /** @var array<string, string> */
-    public array $upgrade_notice = [];
+    public array  $upgrade_notice = [];
 
     /** @var array<int, string> */
-    public array $screenshots = [];
+    public array  $screenshots = [];
 
     /** @var array<string, string> */
-    public array $faq = [];
+    public array  $faq = [];
 
     public string $raw_contents = '';
-
-    /**
-     * Screenshot asset URLs, keyed by filename (e.g. 'screenshot-1.png' => 'https://…').
-     * Supplied at construction time; used by screenshotsAsList().
-     *
-     * @var array<string, string>
-     */
-    public array $assets = [];
 
     /**
      * Warning flags set when specific parsing anomalies are encountered.
@@ -104,20 +96,15 @@ class Parser
      *   no_short_description_present  — Short description was inferred from the description body.
      *   trimmed_short_description     — Short description was truncated to 150 chars.
      *   trimmed_section_*             — A section was truncated to its word limit.
-     *
-     * @var array<string, bool|string|list<string>>
      */
+    /** @var array<string, mixed> */
     public array $warnings = [];
 
     // -------------------------------------------------------------------------
     // Configuration
     // -------------------------------------------------------------------------
 
-    /**
-     * Sections we always recognise by name.
-     *
-     * @var list<string>
-     */
+    /** @var string[] Sections we always recognise by name. */
     protected array $expected_sections = [
         'description',
         'installation',
@@ -128,22 +115,14 @@ class Parser
         'other_notes',
     ];
 
-    /**
-     * Section-name aliases: from => to.
-     *
-     * @var array<string, string>
-     */
+    /** @var array<string, string> Section-name aliases: from => to. */
     protected array $alias_sections = [
         'frequently_asked_questions' => 'faq',
         'change_log'                 => 'changelog',
         'screenshot'                 => 'screenshots',
     ];
 
-    /**
-     * Valid readme header keys (normalised) => property name.
-     *
-     * @var array<string, string>
-     */
+    /** @var array<string, string> Valid readme header keys (normalised) => property name. */
     protected array $valid_headers = [
         'tested'            => 'tested',
         'tested up to'      => 'tested',
@@ -158,18 +137,10 @@ class Parser
         'license uri'       => 'license_uri',
     ];
 
-    /**
-     * Tags silently removed from the tags list.
-     *
-     * @var list<string>
-     */
+    /** @var string[] Tags silently removed from the tags list. */
     protected array $ignore_tags = ['plugin', 'wordpress'];
 
-    /**
-     * Maximum lengths for individual fields.
-     *
-     * @var array<string, int>
-     */
+    /** @var array<string, int> Maximum lengths for individual fields. */
     protected array $maximum_field_lengths = [
         'short_description' => 150,
         'section'           => 2500,
@@ -193,18 +164,14 @@ class Parser
      * @param string $input A file path, URL, or the raw contents of a readme.
      * @param HtmlSanitizerInterface|null $sanitizer Custom HTML sanitizer; defaults to the Symfony adapter.
      * @param MarkdownConverterInterface|null $markdown Custom Markdown converter; defaults to the Parsedown adapter.
-     * @param array<string, string> $assets Screenshot asset map: filename → URL (e.g. ['screenshot-1.png' => 'https://…']).
-     *                                      Used by screenshotsAsList(). Leave empty to skip image rendering.
      */
     public function __construct(
         string $input = '',
         ?HtmlSanitizerInterface $sanitizer = null,
         ?MarkdownConverterInterface $markdown = null,
-        array $assets = [],
     ) {
-        $this->sanitizerAdapter = $sanitizer ?? new SymfonyHtmlSanitizerAdapter();
+        $this->sanitizerAdapter = $sanitizer ?? new NativeHtmlSanitizerAdapter();
         $this->markdownAdapter  = $markdown  ?? new ParsedownAdapter();
-        $this->assets           = $assets;
 
         if ($input === '') {
             return;
@@ -403,7 +370,7 @@ class Parser
         $this->sections = array_filter($this->sections);
 
         // Fallback: use short description as description body.
-        if (empty($this->sections['description'])) {
+        if (empty($this->sections['description']) && $this->short_description !== '') {
             $this->sections['description'] = $this->short_description;
         }
 
@@ -436,6 +403,20 @@ class Parser
             $this->sections[$section] = $trimmed;
         }
 
+        // Screenshots → indexed array (from raw text, before Markdown conversion).
+        if (isset($this->sections['screenshots'])) {
+            preg_match_all('/^\d+\.\s+(.+)$/m', $this->sections['screenshots'], $matches);
+
+            if (!empty($matches[1])) {
+                $i = 1;
+
+                foreach ($matches[1] as $caption) {
+                    $this->screenshots[$i++] = trim($caption);
+                }
+            }
+            unset($this->sections['screenshots']);
+        }
+
         // FAQ → own array, rendered as <dl>.
         if (isset($this->sections['faq'])) {
             $this->faq             = $this->parseSubSection($this->sections['faq']);
@@ -465,20 +446,6 @@ class Parser
                 $this->warnings['trimmed_short_description'] = true;
             }
             $this->short_description = $trimmedShort;
-        }
-
-        // Screenshots → indexed array.
-        if (isset($this->sections['screenshots'])) {
-            preg_match_all('#<li>(.*?)</li>#is', $this->sections['screenshots'], $matches, PREG_SET_ORDER);
-
-            if ($matches) {
-                $i = 1;
-
-                foreach ($matches as $match) {
-                    $this->screenshots[$i++] = $this->filterHtml($match[1]);
-                }
-            }
-            unset($this->sections['screenshots']);
         }
 
         // Render FAQ as <dl>.
@@ -628,9 +595,9 @@ class Parser
      * Invalid-looking slugs (containing spaces or disallowed characters) are warned
      * and dropped.
      *
-     * @param list<string> $users
+     * @param string[] $users
      *
-     * @return list<string>
+     * @return string[]
      */
     protected function sanitizeContributors(array $users): array
     {
@@ -802,7 +769,7 @@ class Parser
      * Parse a section body into an associative array of Heading => Content.
      * Used for FAQ and Upgrade Notice sections.
      *
-     * @param string|list<string> $lines
+     * @param string|string[] $lines
      *
      * @return array<string, string>
      */
@@ -862,213 +829,6 @@ class Parser
     }
 
     // -------------------------------------------------------------------------
-    // Post-processing helpers
-    // -------------------------------------------------------------------------
-
-    /**
-     * Collect all parsed properties into an associative array and apply the
-     * standard post-processing pipeline:
-     *
-     *   1. Contributors are expanded into structured profile records.
-     *   2. FAQ entries are rendered as <h4> headings.
-     *   3. Wiki-style sub-headings in changelog, description, and installation
-     *      sections are promoted to <h4> elements.
-     *   4. Screenshots are rendered as a linked <ol> when asset URLs are available.
-     *
-     * @return array<string, mixed>
-     */
-    public function parseData(): array
-    {
-        $data = [];
-
-        foreach (get_object_vars($this) as $property => $value) {
-            $data[$property] = ($property === 'contributors')
-                ? $this->createContributors($value)
-                : $value;
-        }
-
-        $data = $this->faqAsH4($data);
-
-        foreach (['changelog', 'description', 'installation'] as $section) {
-            $data = $this->readmeSectionAsH4($section, $data);
-        }
-
-        return $this->screenshotsAsList($data);
-    }
-
-    /**
-     * Build a structured profile record for each contributor slug.
-     *
-     * WordPress.org exposes two public, stable endpoints for contributor data:
-     *   - Profile page:  https://profiles.wordpress.org/{slug}
-     *   - Avatar image:  https://wordpress.org/grav-redirect.php?user={slug}
-     *
-     * The returned array is keyed by slug; each value contains:
-     *   display_name — the slug itself (human-readable name is not available
-     *                  without a live API call).
-     *   profile      — protocol-relative URL to the contributor's WP.org profile.
-     *   avatar       — URL to the contributor's WP.org avatar image.
-     *
-     * @param string[] $slugs Contributor slugs (already sanitized by the parser).
-     *
-     * @return array<string, array{display_name: string, profile: string, avatar: string}>
-     */
-    public function createContributors(array $slugs): array
-    {
-        $result = [];
-
-        foreach ($slugs as $slug) {
-            $result[$slug] = [
-                'display_name' => $slug,
-                'profile'      => '//profiles.wordpress.org/' . $slug,
-                'avatar'       => 'https://wordpress.org/grav-redirect.php?user=' . rawurlencode($slug),
-            ];
-        }
-
-        return $result;
-    }
-
-    /**
-     * Re-render FAQ entries as <h4> headings followed by their answers.
-     *
-     * The core parser emits FAQ content as a <dl> (definition list). This helper
-     * rebuilds sections['faq'] using <h4> headings, which render more naturally
-     * in most plugin-display contexts.
-     *
-     * Returns $data unchanged when no FAQ entries are present.
-     *
-     * @param array<string, mixed> $data Parsed readme data array.
-     *
-     * @return array<string, mixed>
-     */
-    public function faqAsH4(array $data): array
-    {
-        if (empty($data['faq'])) {
-            return $data;
-        }
-
-        $html = '';
-
-        foreach ($data['faq'] as $question => $answer) {
-            $html .= "<h4>{$question}</h4>\n{$answer}\n";
-        }
-
-        $data['sections']['faq'] = $html;
-
-        return $data;
-    }
-
-    /**
-     * Promote Parsedown-rendered wiki headings to <h4> elements.
-     *
-     * Within section bodies, changelog entries and similar content often use
-     * the `= Version =` heading syntax from the readme.txt format. Because this
-     * is not standard Markdown, Parsedown emits them as `<p>= Version =</p>`
-     * rather than heading elements. This method corrects that by replacing the
-     * pattern `<p>=…=</p>` with `<h4>…</h4>`.
-     *
-     * Sections that already contain <h4> elements are skipped to avoid
-     * double-processing.
-     *
-     * @param string $section Key of the section to process (e.g. 'changelog').
-     * @param array<string, mixed> $data Parsed readme data array.
-     *
-     * @return array<string, mixed>
-     */
-    public function readmeSectionAsH4(string $section, array $data): array
-    {
-        $content = $data['sections'][$section] ?? '';
-
-        if ($content === '' || str_contains($content, '<h4>')) {
-            return $data;
-        }
-
-        $replaced = preg_replace(
-            '/<p>=([^=]+)=<\/p>/',
-            '<h4>$1</h4>',
-            $content,
-        );
-
-        // preg_replace returns null only on a regex error; fall back to original content.
-        $data['sections'][$section] = $replaced ?? $content;
-
-        return $data;
-    }
-
-    /**
-     * Render the screenshots index as an <ol> of linked images.
-     *
-     * Iterates over $data['screenshots'] (a 1-based integer-keyed array of
-     * caption strings) and matches each index to a file in the asset map whose
-     * name begins with `screenshot-{index}`. When a match is found, an <li>
-     * element is emitted containing a linked thumbnail and a caption paragraph.
-     *
-     * The asset map is taken from $this->assets (set at construction time).
-     * If no assets are available, or no screenshot captions were parsed, the
-     * $data array is returned unchanged.
-     *
-     * All URLs and caption text are HTML-encoded before output.
-     *
-     * @param array<string, mixed> $data Parsed readme data array.
-     *
-     * @return array<string, mixed>
-     */
-    public function screenshotsAsList(array $data): array
-    {
-        if (empty($data['screenshots']) || empty($this->assets)) {
-            return $data;
-        }
-
-        $items = '';
-
-        foreach ($data['screenshots'] as $index => $caption) {
-            $url = $this->findScreenshotAsset((int) $index);
-
-            if ($url === null) {
-                continue;
-            }
-
-            $safeUrl     = $this->encode($url);
-            $safeCaption = $this->encode($caption);
-            $items .= '<li>'
-                         . "<a href=\"{$safeUrl}\"><img src=\"{$safeUrl}\" alt=\"{$safeCaption}\"></a>"
-                         . "<p>{$safeCaption}</p>"
-                         . '</li>';
-        }
-
-        if ($items === '') {
-            return $data;
-        }
-
-        $data['sections']['screenshots'] = "<ol>{$items}</ol>";
-
-        return $data;
-    }
-
-    /**
-     * Find the asset URL for a given screenshot index.
-     *
-     * Looks for a key in $this->assets that begins with `screenshot-{index}`
-     * (e.g. `screenshot-1.png`, `screenshot-1.jpg`).
-     *
-     * @param int $index 1-based screenshot number.
-     *
-     * @return string|null URL if found, null otherwise.
-     */
-    private function findScreenshotAsset(int $index): ?string
-    {
-        $prefix = "screenshot-{$index}";
-
-        foreach ($this->assets as $filename => $url) {
-            if (str_starts_with($filename, $prefix)) {
-                return $url;
-            }
-        }
-
-        return null;
-    }
-
-    // -------------------------------------------------------------------------
     // HTML / Markdown
     // -------------------------------------------------------------------------
 
@@ -1115,7 +875,7 @@ class Parser
     }
 
     /**
-     * @param array<int, string> $lines
+     * @param string[] $lines
      */
     protected function getFirstNonWhitespace(array &$lines): string
     {
@@ -1193,12 +953,11 @@ class Parser
         }
 
         // Truncate and append ellipsis first, then check for a cleaner sentence boundary.
-        $ellipsis = ' &hellip;';
-        $text     = mb_substr($text, 0, $length - mb_strlen($ellipsis)) . $ellipsis;
-        $pos      = mb_strrpos($text, '.');
+        $text = mb_substr($text, 0, $length) . ' &hellip;';
+        $pos  = mb_strrpos($text, '.');
 
         // If a sentence ends within the last 20% of the allowed length, trim to it instead.
-        if ($pos !== false && $pos >= (int) round(0.8 * $length) && mb_substr($text, -1) !== '.') {
+        if ($pos !== false && $pos > (int) round(0.8 * $length) && mb_substr($text, -1) !== '.') {
             $text = mb_substr($text, 0, $pos + 1);
         }
 

@@ -107,46 +107,6 @@ class SecurityTest extends ParserTestCase
     }
 
     // -------------------------------------------------------------------------
-    // XSS via screenshotsAsList output
-    // -------------------------------------------------------------------------
-
-    #[Test]
-    public function it_html_encodes_screenshot_caption_in_ol(): void
-    {
-        $assets = ['screenshot-1.png' => 'https://example.com/s1.png'];
-
-        $parser = new \Fragen\WP_Readme_Parser\Parser(
-            __DIR__ . '/fixtures/valid/screenshots-assets.txt',
-            $this->passThroughSanitizer(),
-            $this->passThroughMarkdown(),
-            $assets,
-        );
-        $data = $parser->parseData();
-
-        $this->assertStringNotContainsString('<script>', $data['sections']['screenshots'] ?? '');
-    }
-
-    #[Test]
-    public function it_html_encodes_asset_url_in_ol(): void
-    {
-        // Inject a potentially dangerous URL as the asset value.
-        $assets = ['screenshot-1.png' => 'https://example.com/s1.png" onload="alert(1)'];
-
-        $parser = new \Fragen\WP_Readme_Parser\Parser(
-            __DIR__ . '/fixtures/valid/screenshots-assets.txt',
-            $this->passThroughSanitizer(),
-            null,
-            $assets,
-        );
-        $data = $parser->parseData();
-        $html = $data['sections']['screenshots'] ?? '';
-
-        // The injected quote should be encoded, not raw.
-        $this->assertStringNotContainsString('" onload="', $html);
-        $this->assertStringContainsString('&quot;', $html);
-    }
-
-    // -------------------------------------------------------------------------
     // $name type correctness
     // -------------------------------------------------------------------------
 

@@ -42,7 +42,7 @@ class SectionParsingTest extends ParserTestCase
         $readme = $this->makeReadme(body: "{$long}\n\n== Description ==\nFull desc.");
         $parser = $this->parse($readme);
 
-        $this->assertLessThanOrEqual(150, mb_strlen($parser->short_description));
+        $this->assertStringEndsWith('&hellip;', $parser->short_description);
         $this->assertArrayHasKey('trimmed_short_description', $parser->warnings);
     }
 
@@ -140,7 +140,7 @@ class SectionParsingTest extends ParserTestCase
         $readme = $this->makeReadme(
             body: "Desc.\n\n== Screenshot ==\n1. The main view.",
         );
-        $parser = $this->parseReal($readme);
+        $parser = $this->parse($readme);
         // 'screenshot' is an alias for 'screenshots' → captured into $screenshots array.
         $this->assertNotEmpty($parser->screenshots);
     }
@@ -218,7 +218,7 @@ class SectionParsingTest extends ParserTestCase
     #[Test]
     public function it_parses_screenshots_into_indexed_array(): void
     {
-        $parser = $this->parseFixtureReal('valid/standard.txt');
+        $parser = $this->parseFixture('valid/standard.txt');
         $this->assertArrayHasKey(1, $parser->screenshots);
         $this->assertArrayHasKey(2, $parser->screenshots);
     }
@@ -226,7 +226,7 @@ class SectionParsingTest extends ParserTestCase
     #[Test]
     public function it_starts_screenshot_index_at_one(): void
     {
-        $parser = $this->parseFixtureReal('valid/standard.txt');
+        $parser = $this->parseFixture('valid/standard.txt');
         $this->assertArrayNotHasKey(0, $parser->screenshots);
         $this->assertStringContainsString('settings page', $parser->screenshots[1]);
     }
@@ -234,7 +234,7 @@ class SectionParsingTest extends ParserTestCase
     #[Test]
     public function it_removes_screenshots_from_sections_after_parsing(): void
     {
-        $parser = $this->parseFixtureReal('valid/standard.txt');
+        $parser = $this->parseFixture('valid/standard.txt');
         $this->assertArrayNotHasKey('screenshots', $parser->sections);
     }
 

@@ -13,7 +13,6 @@
             <file>tests/VersionSanitizationTest.php</file>
             <file>tests/LicenseValidationTest.php</file>
             <file>tests/EdgeCasesTest.php</file>
-            <file>tests/GitUpdaterHelpersTest.php</file>
             <file>tests/SecurityTest.php</file>
         </testsuite>
         <testsuite name="Integration">

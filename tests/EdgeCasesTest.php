@@ -73,7 +73,7 @@ class EdgeCasesTest extends ParserTestCase
     public function it_handles_whitespace_only_input(): void
     {
         $parser = $this->parse("   \n\n   ");
-        $this->assertEmpty(array_filter($parser->sections));
+        $this->assertEmpty($parser->sections);
     }
 
     #[Test]
@@ -132,8 +132,8 @@ class EdgeCasesTest extends ParserTestCase
     {
         // Build a ~170-char description where a sentence ends around the 80% mark.
         // The last sentence pushes it over 150 chars.
-        $first  = str_repeat('a', 120) . '. '; // 122 chars, period at position 120
-        $second = str_repeat('b', 50);           // pushes total to 172
+        $first  = str_repeat('a', 121) . '. '; // 123 chars, period at position 121
+        $second = str_repeat('b', 50);           // pushes total to 173
 
         $readme = $this->makeReadme(body: "{$first}{$second}\n\n== Description ==\nFull.");
         $parser = $this->parse($readme);

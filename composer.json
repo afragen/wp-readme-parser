@@ -4,8 +4,7 @@
     "type": "library",
     "license": "MIT",
     "require": {
-        "php": ">=8.2 <8.6",
-        "symfony/html-sanitizer": "^6.3|^7.0|^8.0",
+        "php": ">=8.0 <8.6",
         "erusev/parsedown": "^1.8"
     },
     "require-dev": {

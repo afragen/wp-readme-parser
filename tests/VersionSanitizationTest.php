@@ -39,7 +39,7 @@ class VersionSanitizationTest extends ParserTestCase
             'beta stripped'    => ['6.0-beta1',     '6.0'],
             'RC stripped'      => ['6.0-RC2',       '6.0'],
             'invalid string'   => ['not-a-version', ''],
-            'major only'       => ['6',             ''],   // must be x.y at minimum
+            'major only'       => ['6',             ''],   // must be x.y at minimum,
         ];
     }
 
@@ -143,7 +143,7 @@ class VersionSanitizationTest extends ParserTestCase
             'tags/ prefix'           => ['tags/1.2.3',   '1.2.3'],
             'slash tags/ prefix'     => ['/tags/1.2.3',  '1.2.3'],
             'leading dot padded'     => ['.5',           '0.5'],
-            'special chars stripped' => ['1.2!3',      '1.23'],  // ! is stripped
+            'special chars stripped' => ['1.2!3',      '1.23'],  // ! is stripped,
         ];
     }
 }
