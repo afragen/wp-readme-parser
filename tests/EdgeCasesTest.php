@@ -73,7 +73,8 @@ class EdgeCasesTest extends ParserTestCase
     public function it_handles_whitespace_only_input(): void
     {
         $parser = $this->parse("   \n\n   ");
-        $this->assertEmpty($parser->sections);
+        // sections['description'] is always present, defaulting to '' when not defined.
+        $this->assertSame(['description' => ''], $parser->sections);
     }
 
     #[Test]
