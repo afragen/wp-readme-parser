@@ -20,6 +20,7 @@ class VersionSanitizationTest extends ParserTestCase
 
     /**
      * @test
+     *
      * @dataProvider requiresVersionProvider
      */
     #[Test]
@@ -69,6 +70,7 @@ class VersionSanitizationTest extends ParserTestCase
 
     /**
      * @test
+     *
      * @dataProvider validTestedVersionProvider
      */
     #[Test]
@@ -107,6 +109,7 @@ class VersionSanitizationTest extends ParserTestCase
 
     /**
      * @test
+     *
      * @dataProvider requiresPhpProvider
      */
     #[Test]
@@ -143,6 +146,7 @@ class VersionSanitizationTest extends ParserTestCase
 
     /**
      * @test
+     *
      * @dataProvider stableTagProvider
      */
     #[Test]

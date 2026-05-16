@@ -21,6 +21,7 @@ class LicenseValidationTest extends ParserTestCase
 
     /**
      * @test
+     *
      * @dataProvider compatibleLicenseProvider
      */
     #[Test]
@@ -57,6 +58,7 @@ class LicenseValidationTest extends ParserTestCase
 
     /**
      * @test
+     *
      * @dataProvider incompatibleLicenseProvider
      */
     #[Test]
@@ -82,6 +84,7 @@ class LicenseValidationTest extends ParserTestCase
 
     /**
      * @test
+     *
      * @dataProvider unknownLicenseProvider
      */
     #[Test]

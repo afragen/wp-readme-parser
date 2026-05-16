@@ -24,6 +24,7 @@ class SecurityTest extends ParserTestCase
 
     /**
      * @test
+     *
      * @dataProvider unsafeDonateUrlProvider
      */
     #[Test]
@@ -54,6 +55,7 @@ class SecurityTest extends ParserTestCase
 
     /**
      * @test
+     *
      * @dataProvider safeDonateUrlProvider
      */
     #[Test]
