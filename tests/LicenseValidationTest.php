@@ -19,6 +19,10 @@ class LicenseValidationTest extends ParserTestCase
     // validateLicense() unit tests
     // -------------------------------------------------------------------------
 
+    /**
+     * @test
+     * @dataProvider compatibleLicenseProvider
+     */
     #[Test]
     #[DataProvider('compatibleLicenseProvider')]
     public function it_identifies_compatible_licenses(string $license): void
@@ -51,6 +55,10 @@ class LicenseValidationTest extends ParserTestCase
         ];
     }
 
+    /**
+     * @test
+     * @dataProvider incompatibleLicenseProvider
+     */
     #[Test]
     #[DataProvider('incompatibleLicenseProvider')]
     public function it_identifies_incompatible_licenses(string $license): void
@@ -72,6 +80,10 @@ class LicenseValidationTest extends ParserTestCase
         ];
     }
 
+    /**
+     * @test
+     * @dataProvider unknownLicenseProvider
+     */
     #[Test]
     #[DataProvider('unknownLicenseProvider')]
     public function it_returns_unknown_for_unrecognised_licenses(string $license): void
@@ -93,6 +105,7 @@ class LicenseValidationTest extends ParserTestCase
     // License header parsing
     // -------------------------------------------------------------------------
 
+    /** @test */
     #[Test]
     public function it_parses_license_header(): void
     {
@@ -100,6 +113,7 @@ class LicenseValidationTest extends ParserTestCase
         $this->assertSame('GPLv2 or later', $parser->license);
     }
 
+    /** @test */
     #[Test]
     public function it_parses_explicit_license_uri_header(): void
     {
@@ -107,6 +121,7 @@ class LicenseValidationTest extends ParserTestCase
         $this->assertSame('https://www.gnu.org/licenses/gpl-2.0.html', $parser->license_uri);
     }
 
+    /** @test */
     #[Test]
     public function it_extracts_license_uri_embedded_in_license_field(): void
     {
@@ -119,6 +134,7 @@ class LicenseValidationTest extends ParserTestCase
         $this->assertSame('https://www.gnu.org/licenses/gpl-2.0.html', $parser->license_uri);
     }
 
+    /** @test */
     #[Test]
     public function it_does_not_overwrite_explicit_license_uri_with_embedded_one(): void
     {
@@ -136,6 +152,7 @@ class LicenseValidationTest extends ParserTestCase
     // License warnings
     // -------------------------------------------------------------------------
 
+    /** @test */
     #[Test]
     public function it_warns_on_missing_license(): void
     {
@@ -143,6 +160,7 @@ class LicenseValidationTest extends ParserTestCase
         $this->assertArrayHasKey('license_missing', $parser->warnings);
     }
 
+    /** @test */
     #[Test]
     public function it_warns_on_incompatible_license(): void
     {
@@ -150,6 +168,7 @@ class LicenseValidationTest extends ParserTestCase
         $this->assertArrayHasKey('invalid_license', $parser->warnings);
     }
 
+    /** @test */
     #[Test]
     public function it_warns_on_unknown_license(): void
     {
@@ -157,6 +176,7 @@ class LicenseValidationTest extends ParserTestCase
         $this->assertArrayHasKey('unknown_license', $parser->warnings);
     }
 
+    /** @test */
     #[Test]
     public function it_does_not_warn_on_valid_license(): void
     {
